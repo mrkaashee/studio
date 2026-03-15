@@ -1,135 +1,163 @@
-import type { NavigationMenuItem } from '@nuxt/ui'
+export interface Tool {
+  icon: string
+  label: string
+  description: string
+  category: { icon: string, label: string }
+}
 
 export const useToolsList = () => {
-  // category: { icon: 'i-lucide-code', label: 'Developer' },
-  // { icon: 'i-lucide-image', label: 'Image' },
-  // { icon: 'i-lucide-file-text', label: 'PDF' },
-
-  const tools: NavigationMenuItem[] = [
+  const tools: Tool[] = [
+    // Developer
     {
+      icon: 'i-lucide-braces',
       label: 'JSON Formatter & Validator',
       description: 'Clean, prettify, and validate your JSON strings with ease.',
-      category: { icon: 'i-lucide-braces', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-arrow-right-left',
       label: 'Base64 Encoder & Decoder',
       description: 'Encode or decode text and images to Base64 format instantly.',
-      category: { icon: 'i-lucide-arrow-right-left', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-qr-code',
       label: 'QR Code Generator',
       description: 'Generate free QR codes for URLs, text, and more. Customize colors and size.',
-      category: { icon: 'i-lucide-qr-code', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-calendar-clock',
       label: 'Unix Epoch Converter',
       description: 'Convert Unix timestamps to human-readable dates and vice versa.',
-      category: { icon: 'i-lucide-calendar-clock', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-cpu',
       label: 'Byte Converter',
       description: 'Convert between data units: Bytes, KB, MB, GB, TB, PB and more.',
-      category: { icon: 'i-lucide-cpu', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-fingerprint',
       label: 'UUID Generator',
       description: 'Generate random (v4) or time-ordered (v7) UUIDs instantly.',
-      category: { icon: 'i-lucide-fingerprint', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-binary',
       label: 'Number Base Converter',
       description: 'Convert numbers between decimal, binary, octal, and hexadecimal.',
-      category: { icon: 'i-lucide-binary', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-link',
       label: 'URL Encoder/Decoder',
       description: 'Encode or decode URL strings for safe transmission.',
-      category: { icon: 'i-lucide-link', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-code-2',
       label: 'HTML/XML Encoder',
       description: 'Encode or decode HTML and XML entities for safe web display.',
-      category: { icon: 'i-lucide-code-2', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-file-archive',
       label: 'Gzip Compress/Decompress',
       description: 'Compress or decompress text using Gzip compression.',
-      category: { icon: 'i-lucide-file-archive', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-braces',
       label: 'JSON Escape/Unescape',
       description: 'Escape or unescape special characters in JSON strings.',
-      category: { icon: 'i-lucide-braces', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-calendar-clock',
       label: 'Cron Expression Parser',
       description: 'Parse and explain cron expressions with next run times.',
-      category: { icon: 'i-lucide-calendar-clock', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-regex',
       label: 'Regex Tester',
       description: 'Test regular expressions with real-time matching and highlighting.',
-      category: { icon: 'i-lucide-code-2', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-git-compare',
       label: 'Text Diff Comparison',
       description: 'Compare two texts and see the differences highlighted.',
-      category: { icon: 'i-lucide-git-compare', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-file-text',
       label: 'Markdown Preview',
       description: 'Write and preview Markdown in real-time with HTML export.',
-      category: { icon: 'i-lucide-file-text', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-lock',
       label: 'Chmod Calculator',
       description: 'Convert Linux file permissions between Octal and Symbolic formats.',
-      category: { icon: 'i-lucide-lock', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-file-code',
       label: 'CSS/JS Minifier',
       description: 'Compress CSS and JavaScript code to reduce file size.',
-      category: { icon: 'i-lucide-file-code', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-network',
       label: 'IP Subnet Calculator',
       description: 'Calculate network, broadcast, host ranges, and more from IP/CIDR.',
-      category: { icon: 'i-lucide-router', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-container',
       label: 'Composerize',
       description: 'Convert Docker Run commands to Docker Compose YAML format.',
-      category: { icon: 'i-lucide-container', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
     {
+      icon: 'i-lucide-layers',
       label: 'Docker Compose Builder',
       description: 'Build Docker Compose and Stack files visually with validation and download.',
-      category: { icon: 'i-lucide-layers', label: 'Developer' },
+      category: { icon: 'i-lucide-code', label: 'Developer' },
     },
+    // Image
     {
+      icon: 'i-lucide-crop',
       label: 'Image Cropper',
       description: 'Crop images to any aspect ratio with precision.',
-      category: { icon: 'i-lucide-crop', label: 'Image' },
+      category: { icon: 'i-lucide-image', label: 'Image' },
     },
     {
+      icon: 'i-lucide-scaling',
       label: 'Image Resizer',
       description: 'Change image dimensions while maintaining quality.',
-      category: { icon: 'i-lucide-scaling', label: 'Image' },
+      category: { icon: 'i-lucide-image', label: 'Image' },
     },
     {
+      icon: 'i-lucide-refresh-ccw',
       label: 'Image Converter',
       description: 'Convert between PNG, JPG, WebP, and other formats.',
-      category: { icon: 'i-lucide-refresh-ccw', label: 'Image' },
+      category: { icon: 'i-lucide-image', label: 'Image' },
     },
     {
+      icon: 'i-lucide-shrink',
       label: 'Image Compressor',
       description: 'Optimize and compress images for faster web loading.',
-      category: { icon: 'i-lucide-shrink', label: 'Image' },
+      category: { icon: 'i-lucide-image', label: 'Image' },
     },
     {
+      icon: 'i-lucide-file-image',
       label: 'SVG to PNG Converter',
       description: 'Quickly convert SVG vector files to PNG images.',
-      category: { icon: 'i-lucide-file-image', label: 'Image' },
+      category: { icon: 'i-lucide-image', label: 'Image' },
     },
   ]
 
