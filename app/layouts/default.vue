@@ -1,4 +1,4 @@
 <template>
-  <AppHeader title="Tools" />
+  <AppHeader />
   <slot />
 </template>
