@@ -159,6 +159,54 @@ export const useToolsList = () => {
       description: 'Quickly convert SVG vector files to PNG images.',
       category: { icon: 'i-lucide-image', label: 'Image' },
     },
+    {
+      icon: 'i-lucide-rotate-cw',
+      label: 'Image Rotate & Flip',
+      description: 'Rotate images by any angle and flip horizontally or vertically.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-stamp',
+      label: 'Image Watermark',
+      description: 'Add text or image watermarks to photos with custom opacity and position.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-info',
+      label: 'EXIF Metadata Viewer',
+      description: 'Extract and view EXIF metadata from JPEG and TIFF image files.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-eye-dropper',
+      label: 'Image Color Extractor',
+      description: 'Extract the dominant color palette from any image.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-eraser',
+      label: 'Background Remover',
+      description: 'Automatically remove the background from images in seconds.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-monitor-smartphone',
+      label: 'Favicon Generator',
+      description: 'Generate favicons in all required sizes from a single image.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-binary',
+      label: 'Image to Base64',
+      description: 'Encode images to Base64 data URIs for embedding in HTML or CSS.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
+    {
+      icon: 'i-lucide-sparkles',
+      label: 'Photo Filters',
+      description: 'Apply grayscale, sepia, blur, brightness, and other CSS filters to images.',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+    },
     // Security / Crypto
     {
       icon: 'i-lucide-shield',

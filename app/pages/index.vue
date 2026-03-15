@@ -30,7 +30,11 @@ const categories = computed(() => {
             :icon="tool.icon"
             :title="tool.label"
             :description="tool.description"
-            variant="subtle" />
+            variant="subtle">
+            <template #footer>
+              <UBadge :label="category" color="neutral" variant="subtle" />
+            </template>
+          </UPageCard>
         </div>
       </div>
     </UContainer>
