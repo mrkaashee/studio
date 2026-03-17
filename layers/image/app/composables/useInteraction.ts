@@ -61,16 +61,23 @@ export function useInteraction<T>(
     stops.push(useEventListener(window, 'touchend', handlePointerUp))
   }
 
+  let rafId: number | null = null
   const handlePointerMove = (e: MouseEvent | TouchEvent) => {
     if (!isInteracting.value) return
     const p = getEventPoint(e)
     if (!p) return
 
-    const scale = zoomLevel.value || 1
-    const dx = (p.clientX - startPointer.value.x) / scale
-    const dy = (p.clientY - startPointer.value.y) / scale
+    if (rafId !== null) cancelAnimationFrame(rafId)
+    rafId = requestAnimationFrame(() => {
+      rafId = null
+      if (!isInteracting.value) return
+      const scale = zoomLevel.value || 1
+      const dx = (p.clientX - startPointer.value.x) / scale
+      const dy = (p.clientY - startPointer.value.y) / scale
 
-    onMove(dx, dy, p)
+      console.log('useInteraction: Move', { dx, dy, scale })
+      onMove(dx, dy, p)
+    })
   }
 
   const handlePointerUp = () => {

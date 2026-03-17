@@ -1,28 +1,43 @@
 <script setup lang="ts">
-import { computed, inject, watch, onUnmounted } from 'vue'
+import { computed, inject, watch, onUnmounted, onMounted } from 'vue'
 import type { ImageEditorContext } from '../types/editor'
+import { getEventPoint } from '../utils/interaction'
 import ImgHandler from './ImgHandler.vue'
 
 const props = defineProps<{
   /** Hide internal UI controls — useful when controls are in a separate sidebar. */
   headless?: boolean
-  /** Shared state from parent (optional, fallbacks to internal if not provided) */
-  censorState?: any
+  censorState?: ReturnType<typeof useCensor>
 }>()
 
 const imgEditor = inject<ImageEditorContext>('imgEditor')
 
 // If no state provided, use local (backwards compatibility)
-const internalState = props.censorState ? null : useCensor(computed(() => imgEditor?.zoomLevel.value || 1))
+const internalState = props.censorState ? undefined : useCensor(computed(() => imgEditor?.zoomLevel.value || 1))
 
 // Resolve state source correctly
-const state = computed(() => props.censorState || internalState)
+const state = computed(() => (props.censorState || internalState) as ReturnType<typeof useCensor>)
 
-// Destructure for template convenience
-const mode = computed(() => state.value.mode.value)
-const intensity = computed(() => state.value.intensity.value)
-const useArea = computed(() => state.value.useArea.value)
-const selection = computed(() => state.value.selection.value)
+const setBoxRef = (id: string, el: HTMLElement | null) => {
+  if (el) state.value.boxRefs.set(id, el)
+  else state.value.boxRefs.delete(id)
+}
+
+// Proxy state values to top-level writable computeds for the template
+const mode = computed({
+  get: () => state.value.mode.value,
+  set: val => state.value.mode.value = val
+})
+const intensity = computed({
+  get: () => state.value.intensity.value,
+  set: val => state.value.intensity.value = val
+})
+const useArea = computed({
+  get: () => state.value.useArea.value,
+  set: val => state.value.useArea.value = val
+})
+const selections = computed(() => state.value.selections.value)
+const activeSelectionId = computed(() => state.value.activeSelectionId.value)
 const isInteracting = computed(() => state.value.isInteracting.value)
 
 const isActive = computed(() => imgEditor?.activeTool.value === 'censor')
@@ -40,22 +55,15 @@ const applyCensor = () => {
 }
 
 onMounted(() => {
-  console.log('ImgCensor: COMPONENT MOUNTED', {
-    isActive: isActive.value,
-    headless: props.headless,
-    editor: !!imgEditor,
-    overlay: !!imgEditor?.overlayRef.value
-  })
+  console.log('ImgCensor: Performance layer active', { selections: selections.value.length })
 })
 
 watch(isActive, val => {
-  console.log('ImgCensor: isActive changed to', val)
   if (val) {
     imgEditor?.registerApplyHook(applyCensor)
-    // Initialization check
     const editorState = imgEditor?.getImageState()
     if (editorState?.width && editorState?.height) {
-      if (!selection.value.width) {
+      if (selections.value.length === 0) {
         state.value.initializeSelection(editorState.width, editorState.height)
       }
     }
@@ -74,20 +82,16 @@ const handleMouseDown = (e: MouseEvent | TouchEvent) => {
   if (!isActive.value || !useArea.value || !imgEditor) return
 
   const target = e.target as HTMLElement
-  if (target.closest('.u-img-censor-box')) {
-    return
-  }
+  if (target.closest('.u-img-censor-box')) return
 
   const container = e.currentTarget as HTMLElement
   const rect = container.getBoundingClientRect()
+  const p = getEventPoint(e)
+  if (!p) return
 
-  const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX
-  const clientY = 'touches' in e ? e.touches[0].clientY : (e as MouseEvent).clientY
+  const x = (p.clientX - rect.left) / imgEditor.zoomLevel.value
+  const y = (p.clientY - rect.top) / imgEditor.zoomLevel.value
 
-  const x = (clientX - rect.left) / imgEditor.zoomLevel.value
-  const y = (clientY - rect.top) / imgEditor.zoomLevel.value
-
-  console.log('ImgCensor: Starting selection via handleMouseDown', x, y)
   state.value.startNewSelection(e, x, y)
 }
 
@@ -132,19 +136,19 @@ defineExpose({
             :color="mode === 'blur' ? 'primary' : 'neutral'"
             :variant="mode === 'blur' ? 'solid' : 'soft'"
             size="xs"
-            @click="state.value.mode.value = 'blur'" />
+            @click="mode = 'blur'" />
           <UButton
             label="Pixelate"
             :color="mode === 'pixelate' ? 'primary' : 'neutral'"
             :variant="mode === 'pixelate' ? 'solid' : 'soft'"
             size="xs"
-            @click="state.value.mode.value = 'pixelate'" />
+            @click="mode = 'pixelate'" />
         </div>
 
         <div class="space-y-3">
           <div class="flex items-center justify-between">
             <span class="text-[10px] text-muted uppercase font-medium">Use Selection</span>
-            <USwitch v-model="state.value.useArea.value" size="xs" />
+            <USwitch v-model="useArea" size="xs" />
           </div>
 
           <div class="space-y-1.5">
@@ -152,7 +156,7 @@ defineExpose({
               <span>Intensity</span>
               <span>{{ intensity }}</span>
             </div>
-            <USlider v-model="state.value.intensity.value" :min="1" :max="50" size="sm" />
+            <USlider v-model="intensity" :min="1" :max="50" size="sm" />
           </div>
         </div>
 
@@ -172,60 +176,72 @@ defineExpose({
       </div>
     </div>
 
-    <!-- The Interaction Overlay -->
+    <!-- The Interaction Overlay / Drawing Surface -->
     <div
       v-if="isActive"
-      class="u-img-censor-overlay absolute inset-0 w-full h-full pointer-events-auto cursor-crosshair overflow-visible border-4 border-dashed border-red-500/50 z-9999"
+      class="u-img-censor-overlay absolute inset-0 w-full h-full pointer-events-auto cursor-crosshair overflow-visible"
       @mousedown.stop.prevent="handleMouseDown"
       @touchstart.stop.prevent="handleMouseDown">
-      <!-- Debug Label -->
-      <div
-        class="absolute top-0 right-0 bg-red-600 text-white text-[10px] font-bold px-2 py-1 z-10000"
-        :style="{ transform: `scale(${counterScale})`, transformOrigin: 'top right' }">
-        DEBUG: CENSOR TOOL READY
-      </div>
-
-      <!-- Helper Instructions -->
-      <div
-        v-if="useArea && selection.width <= 1"
-        class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-black/80 text-white p-4 rounded-xl text-center shadow-2xl z-10"
-        :style="{ transform: `translate(-50%, -50%) scale(${counterScale})` }">
-        <UIcon name="i-lucide-mouse-pointer-2" class="w-8 h-8 mx-auto mb-2 text-primary" />
-        <p>
-          Click and Drag anywhere
-        </p>
-        <p class="text-xs opacity-70">
-          to draw a blur area
-        </p>
-      </div>
-
-      <!-- The Selection Box -->
-      <div
-        v-if="useArea && selection.width > 0"
-        class="u-img-censor-box absolute pointer-events-auto cursor-move group"
-        :class="{ 'is-interacting': isInteracting }"
-        :style="{
-          left: selection.x + 'px',
-          top: selection.y + 'px',
-          width: selection.width + 'px',
-          height: selection.height + 'px',
-          outline: `${4 * counterScale}px solid rgba(255,255,255,0.9)`,
-          boxShadow: `0 0 0 ${1 * counterScale}px black, 0 0 0 9999px rgba(0,0,0,0.6)`,
-        }"
-        @mousedown.stop.prevent="state.value.initiateInteraction($event, 'move')"
-        @touchstart.stop.prevent="state.value.initiateInteraction($event, 'move')">
-        <!-- Selection Area Highlight -->
+      <!-- Multiple Selection Boxes -->
+      <template v-if="useArea">
         <div
-          class="absolute inset-0 border-dashed transition-all duration-200 group-[.is-interacting]:bg-primary/30"
-          :class="isInteracting ? 'border-primary' : 'border-white'"
-          :style="{ borderWidth: (2 * counterScale) + 'px' }" />
+          v-for="sel in selections"
+          :key="sel.id"
+          :ref="el => setBoxRef(sel.id, el as HTMLElement | null)"
+          class="u-img-censor-box absolute pointer-events-auto cursor-move group"
+          :class="[
+            { 'is-interacting': activeSelectionId === sel.id && isInteracting },
+            { 'is-active': activeSelectionId === sel.id },
+            { 'is-blur': sel.mode === 'blur' },
+            { 'is-pixelate': sel.mode === 'pixelate' },
+          ]"
+          :style="{
+            'transform': `translate3d(${sel.x}px, ${sel.y}px, 0)`,
+            'width': sel.width + 'px',
+            'height': sel.height + 'px',
+            'zIndex': activeSelectionId === sel.id ? 100 : 10,
+            '--intensity': sel.intensity + 'px',
+            '--pixel-intensity': (sel.intensity / 2) + 'px',
+            '--outline-width': (2 * counterScale) + 'px',
+            '--active-outline': (4 * counterScale) + 'px',
+            '--shadow-width': (1 * counterScale) + 'px',
+          }"
+          @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'move')"
+          @touchstart.stop.prevent="state.initiateInteraction($event, sel.id, 'move')">
+          <!-- Delete button for active selection -->
+          <div
+            v-if="activeSelectionId === sel.id && !isInteracting"
+            class="absolute pointer-events-auto bg-black text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors z-50 shadow-lg"
+            :style="{
+              width: `${24 * counterScale}px`,
+              height: `${24 * counterScale}px`,
+              top: `-${12 * counterScale}px`,
+              right: `-${12 * counterScale}px`,
+            }"
+            title="Remove this area"
+            @mousedown.stop.prevent="state.removeSelection(sel.id)"
+            @touchstart.stop.prevent="state.removeSelection(sel.id)">
+            <UIcon name="i-lucide-x" :style="{ width: `${14 * counterScale}px`, height: `${14 * counterScale}px` }" />
+          </div>
 
-        <!-- High-Visibility Handles -->
-        <ImgHandler position="tl" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.value.initiateInteraction($event, 'resize', 'tl')" />
-        <ImgHandler position="tr" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.value.initiateInteraction($event, 'resize', 'tr')" />
-        <ImgHandler position="bl" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.value.initiateInteraction($event, 'resize', 'bl')" />
-        <ImgHandler position="br" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.value.initiateInteraction($event, 'resize', 'br')" />
-      </div>
+          <!-- Selection Area Highlight -->
+          <div
+            class="absolute inset-0 group-[.is-interacting]:bg-primary/30"
+            :class="[
+              (activeSelectionId === sel.id && isInteracting) ? 'border-primary' : 'border-transparent',
+              { 'transition-all duration-200': !isInteracting },
+            ]"
+            :style="{ borderWidth: (2 * counterScale) + 'px' }" />
+
+          <!-- High-Visibility Handles (Only for active selection) -->
+          <template v-if="activeSelectionId === sel.id">
+            <ImgHandler position="tl" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'tl')" />
+            <ImgHandler position="tr" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'tr')" />
+            <ImgHandler position="bl" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'bl')" />
+            <ImgHandler position="br" :active="isInteracting" :style="{ transform: `scale(${counterScale * 2.5})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'br')" />
+          </template>
+        </div>
+      </template>
     </div>
   </div>
 </template>
@@ -233,5 +249,29 @@ defineExpose({
 <style scoped>
 .u-img-censor {
   display: contents;
+}
+
+.u-img-censor-box {
+  contain: layout size style;
+  will-change: transform, width, height;
+  outline: var(--outline-width) dashed rgba(255,255,255,0.5);
+  transition: outline 0.2s;
+}
+
+.u-img-censor-box.is-active {
+  outline: var(--active-outline) solid rgba(255,255,255,0.9);
+}
+
+.u-img-censor-box.is-active:not(.is-interacting) {
+  box-shadow: 0 0 0 var(--shadow-width) black, 0 0 0 4000px rgba(0,0,0,0.4);
+}
+
+/* Fast CSS variables for backdrop filters instead of string interpolation */
+.u-img-censor-box:not(.is-interacting).is-blur {
+  backdrop-filter: blur(var(--intensity));
+}
+
+.u-img-censor-box:not(.is-interacting).is-pixelate {
+  backdrop-filter: blur(var(--pixel-intensity)) contrast(200%) grayscale(50%);
 }
 </style>

@@ -28,18 +28,18 @@ const posClasses = {
 
 <template>
   <div
-    class="absolute w-6 h-6 flex items-center justify-center pointer-events-auto z-50 transition-transform duration-200 ease-in-out hover:scale-110"
+    class="absolute w-6 h-6 flex items-center justify-center pointer-events-auto z-50 hover:scale-110"
     :class="[posClasses[position], { 'group is-active': active }]"
     :style="{ cursor: cursorMap[position] }">
     <!-- Inner Dot -->
     <div
-      class="w-2.5 h-2.5 bg-white rounded-xs border-[1.5px] border-inverted relative z-10 transition-all duration-200 shadow-sm
+      class="w-2.5 h-2.5 bg-white rounded-xs border-[1.5px] border-inverted relative z-10 shadow-sm
              group-hover:bg-primary group-hover:border-white group-hover:rounded-full
-             [.group.is-active_&]:bg-primary [.group.is-active_&]:border-white [.group.is-active_&]:shadow-[0_0_10px_rgba(var(--color-primary-500),0.5)]" />
+             [.group.is-active_&]:bg-primary [.group.is-active_&]:border-white [.group.is-active_&]:shadow-[0_0_10_rgba(var(--color-primary-500),0.5)]" />
 
     <!-- Glow Effect -->
     <div
-      class="absolute inset-0 bg-[radial-gradient(circle,--theme(--color-primary-500/0.4)_0%,transparent_70%)] opacity-0 transition-opacity duration-300 pointer-events-none
+      class="absolute inset-0 bg-[radial-gradient(circle,--theme(--color-primary-500/0.4)_0%,transparent_70%)] opacity-0 pointer-events-none
              group-hover:opacity-100" />
   </div>
 </template>
