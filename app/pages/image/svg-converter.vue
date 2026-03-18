@@ -44,9 +44,9 @@ const downloadImage = () => {
         borderless
         mode="image">
         <template #header>
-          <div class="flex items-center justify-between px-4 py-3 border-b border-default bg-elevated z-10 w-full relative">
-            <div class="flex items-center gap-3">
-              <div class="p-2 border border-primary/20 bg-primary/10 rounded-lg text-primary">
+          <div class="flex items-center justify-between px-4 py-1.5 border-b border-default bg-elevated z-10 w-full relative">
+            <div class="flex items-center gap-2">
+              <div class="p-1.5 border border-primary/20 bg-primary/10 rounded-lg text-primary">
                 <UIcon
                   name="i-lucide-file-image"
                   class="size-5" />
