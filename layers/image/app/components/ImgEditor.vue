@@ -28,7 +28,7 @@ defineExpose({
   panBounds: computed(() => studioRef.value?.panBounds),
   hasImage: computed(() => studioRef.value?.hasImage),
   isWorkerProcessing: computed(() => studioRef.value?.isWorkerProcessing),
-  
+
   // Methods
   loadImage: (...args: any[]) => studioRef.value?.loadImage(...args),
   updateCanvas: (...args: any[]) => studioRef.value?.updateCanvas(...args),

@@ -41,7 +41,7 @@ watch(() => editorRef.value?.hasImage, loaded => {
   if (loaded) {
     editorRef.value?.activateTool('censor')
     console.log('Blur Tool Page: Censor Tool Activated upon image load')
-    
+
     const state = editorRef.value.getImageState()
     if (state?.width && state?.height && selections.value.length === 0) {
       initializeSelection(state.width, state.height)
