@@ -10,30 +10,30 @@ const props = defineProps<{
   headless?: boolean
   mode?: 'blur' | 'pixelate'
   intensity?: number
-  censorState?: ReturnType<typeof useCensor>
+  state?: ReturnType<typeof useCensor>
 }>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 // If no state provided, use local (backwards compatibility)
-const internalState = props.censorState ? undefined : useCensor(computed(() => imgStudio?.zoomLevel.value || 1))
+const internalState = props.state ? undefined : useCensor(computed(() => imgStudio?.zoomLevel.value || 1))
 
 // Resolve state source correctly
-const state = computed(() => (props.censorState || internalState) as ReturnType<typeof useCensor>)
+const resolvedState = computed(() => (props.state || internalState) as ReturnType<typeof useCensor>)
 
 const setBoxRef = (id: string, el: HTMLElement | null) => {
-  if (el) state.value.boxRefs.set(id, el)
-  else state.value.boxRefs.delete(id)
+  if (el) resolvedState.value.boxRefs.set(id, el)
+  else resolvedState.value.boxRefs.delete(id)
 }
 
 // Proxy state values to top-level writable computeds for the template
 const censorMode = computed({
-  get: () => state.value.mode.value,
-  set: val => state.value.mode.value = val
+  get: () => resolvedState.value.mode.value,
+  set: val => resolvedState.value.mode.value = val
 })
 const censorIntensity = computed({
-  get: () => state.value.intensity.value,
-  set: val => state.value.intensity.value = val
+  get: () => resolvedState.value.intensity.value,
+  set: val => resolvedState.value.intensity.value = val
 })
 
 // Initialize defaults from props if provided
@@ -46,12 +46,12 @@ watch(() => props.intensity, newIntensity => {
 }, { immediate: true })
 
 const useArea = computed({
-  get: () => state.value.useArea.value,
-  set: val => state.value.useArea.value = val
+  get: () => resolvedState.value.useArea.value,
+  set: val => resolvedState.value.useArea.value = val
 })
-const selections = computed(() => state.value.selections.value)
-const activeSelectionId = computed(() => state.value.activeSelectionId.value)
-const isInteracting = computed(() => state.value.isInteracting.value)
+const selections = computed(() => resolvedState.value.selections.value)
+const activeSelectionId = computed(() => resolvedState.value.activeSelectionId.value)
+const isInteracting = computed(() => resolvedState.value.isInteracting.value)
 
 const isActive = computed(() => imgStudio?.activeTool.value === 'censor')
 
@@ -60,7 +60,7 @@ const applyCensor = () => {
   const canvas = imgStudio.getCanvas()
   if (!canvas) return
 
-  const tempCanvas = state.value.getCensoredCanvas(canvas)
+  const tempCanvas = resolvedState.value.getCensoredCanvas(canvas)
   if (tempCanvas) {
     imgStudio.commit(tempCanvas, 'censor')
     imgStudio.deactivateTool()
@@ -77,7 +77,7 @@ watch(isActive, val => {
     const editorState = imgStudio?.getImageState()
     if (editorState?.width && editorState?.height) {
       if (selections.value.length === 0) {
-        state.value.initializeSelection(editorState.width, editorState.height)
+        resolvedState.value.initializeSelection(editorState.width, editorState.height)
       }
     }
   }
@@ -105,7 +105,7 @@ const handleMouseDown = (e: MouseEvent | TouchEvent) => {
   const x = (p.clientX - rect.left) / imgStudio.zoomLevel.value
   const y = (p.clientY - rect.top) / imgStudio.zoomLevel.value
 
-  state.value.startNewSelection(e, x, y)
+  resolvedState.value.startNewSelection(e, x, y)
 }
 
 const counterScale = computed(() => 1 / (imgStudio?.zoomLevel.value || 1))
@@ -113,7 +113,7 @@ const counterScale = computed(() => 1 / (imgStudio?.zoomLevel.value || 1))
 defineExpose({
   mode: censorMode,
   intensity: censorIntensity,
-  useArea: state.value.useArea,
+  useArea: resolvedState.value.useArea,
   isActive,
   applyCensor
 })
@@ -219,8 +219,8 @@ defineExpose({
               '--active-outline': (4 * counterScale) + 'px',
               '--shadow-width': (1 * counterScale) + 'px',
             }"
-            @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'move')"
-            @touchstart.stop.prevent="state.initiateInteraction($event, sel.id, 'move')">
+            @mousedown.stop.prevent="resolvedState.initiateInteraction($event, sel.id, 'move')"
+            @touchstart.stop.prevent="resolvedState.initiateInteraction($event, sel.id, 'move')">
             <!-- Delete button for active selection -->
             <div
               v-if="activeSelectionId === sel.id && !isInteracting"
@@ -232,8 +232,8 @@ defineExpose({
                 right: `-${12 * counterScale}px`,
               }"
               title="Remove this area"
-              @mousedown.stop.prevent="state.removeSelection(sel.id)"
-              @touchstart.stop.prevent="state.removeSelection(sel.id)">
+              @mousedown.stop.prevent="resolvedState.removeSelection(sel.id)"
+              @touchstart.stop.prevent="resolvedState.removeSelection(sel.id)">
               <UIcon name="i-lucide-x" :style="{ width: `${14 * counterScale}px`, height: `${14 * counterScale}px` }" />
             </div>
 
@@ -248,10 +248,10 @@ defineExpose({
 
             <!-- High-Visibility Handles (Only for active selection) -->
             <template v-if="activeSelectionId === sel.id">
-              <ImgHandler position="top-left" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'tl')" />
-              <ImgHandler position="top-right" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'tr')" />
-              <ImgHandler position="bottom-left" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'bl')" />
-              <ImgHandler position="bottom-right" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="state.initiateInteraction($event, sel.id, 'resize', 'br')" />
+              <ImgHandler position="top-left" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="resolvedState.initiateInteraction($event, sel.id, 'resize', 'tl')" />
+              <ImgHandler position="top-right" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="resolvedState.initiateInteraction($event, sel.id, 'resize', 'tr')" />
+              <ImgHandler position="bottom-left" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="resolvedState.initiateInteraction($event, sel.id, 'resize', 'bl')" />
+              <ImgHandler position="bottom-right" :active="isInteracting" :style="{ transform: `scale(${counterScale * 0.6})` }" @mousedown.stop.prevent="resolvedState.initiateInteraction($event, sel.id, 'resize', 'br')" />
             </template>
           </div>
         </template>

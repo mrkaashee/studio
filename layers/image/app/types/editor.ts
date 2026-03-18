@@ -235,6 +235,7 @@ export interface StudioCensorProps {
   headless?: boolean
   mode?: 'blur' | 'pixelate'
   intensity?: number
+  state?: any
 }
 
 export interface StudioCropperProps {

@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+const editorRef = ref<any>(null)
 
 const {
   setSource,
@@ -8,13 +10,20 @@ const {
   isConverting,
 } = useImageConvert()
 
-const sourceImgRef = ref<HTMLImageElement | null>(null)
-
-const onImageLoad = (fileType: string) => {
-  if (sourceImgRef.value) {
-    setSource(sourceImgRef.value, fileType || 'image/svg+xml')
+// Watch for file uploads from the studio
+watch(() => editorRef.value?.sourceFile, file => {
+  if (file && editorRef.value?.imageRef) {
+    // For SVG converter, we assume the input is SVG if we are on this page
+    setSource(editorRef.value.imageRef, file.type || 'image/svg+xml')
   }
-}
+})
+
+// Update the studio canvas with the converted result for preview
+watch(convertedImageUrl, url => {
+  if (url && editorRef.value) {
+    editorRef.value.updateCanvas(url, true)
+  }
+})
 
 const downloadImage = () => {
   if (!convertedBlob.value) return
@@ -28,74 +37,95 @@ const downloadImage = () => {
 </script>
 
 <template>
-  <ImgToolPage
-    title="SVG to PNG Converter"
-    description="High-quality conversion of SVG vector files to PNG images."
-    icon="i-lucide-file-image">
-    <template #default="{ img, fileType }">
-      <div class="relative w-full h-full flex items-center justify-center p-8 overflow-auto">
-        <!-- Hidden Source -->
-        <img
-          ref="sourceImgRef"
-          :src="img"
-          class="hidden"
-          @load="onImageLoad(fileType)">
+  <div class="h-[calc(100vh-var(--header-top-height,64px))] w-full flex flex-col bg-background relative">
+    <ClientOnly>
+      <ImgStudio
+        ref="editorRef"
+        borderless>
+        <template #header>
+          <div class="flex items-center justify-between px-4 py-3 border-b border-default bg-elevated z-10 w-full relative">
+            <div class="flex items-center gap-3">
+              <div class="p-2 border border-primary/20 bg-primary/10 rounded-lg text-primary">
+                <UIcon
+                  name="i-lucide-file-image"
+                  class="size-5" />
+              </div>
+              <div>
+                <h1 class="font-bold tracking-tight text-sm">
+                  SVG to PNG Converter
+                </h1>
+                <p class="text-[10px] text-muted hidden sm:block">
+                  High-quality conversion of SVG vector files to PNG images.
+                </p>
+              </div>
+            </div>
 
-        <!-- Live Result Preview -->
-        <img
-          v-if="convertedImageUrl"
-          :src="convertedImageUrl"
-          class="max-w-full max-h-full object-contain shadow-2xl transition-all duration-300"
-          :class="{ 'opacity-50 grayscale pointer-events-none scale-95': isConverting }">
-        <img
-          v-else
-          :src="img"
-          class="max-w-full max-h-full object-contain shadow-2xl bg-white p-4 rounded-lg">
-
-        <!-- Status Toast -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="transform translate-y-4 opacity-0"
-          enter-to-class="transform translate-y-0 opacity-100"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="transform translate-y-0 opacity-100"
-          leave-to-class="transform translate-y-4 opacity-0">
-          <div v-if="convertedImageUrl" class="absolute top-4 right-4 bg-inverted/20 border border-muted/20 backdrop-blur-xl px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold tracking-wider uppercase">
-            <UIcon :name="isConverting ? 'i-lucide-loader-2' : 'i-lucide-zap'" :class="{ 'animate-spin': isConverting, 'text-primary': !isConverting }" />
-            {{ isConverting ? 'Rendering...' : 'PNG Preview' }}
+            <div class="flex gap-2">
+              <UButton
+                label="Download PNG"
+                icon="i-lucide-download"
+                color="primary"
+                size="sm"
+                :disabled="!convertedBlob || isConverting"
+                :loading="isConverting"
+                @click="downloadImage" />
+            </div>
           </div>
-        </Transition>
-      </div>
-    </template>
+        </template>
 
-    <template #actions>
-      <UButton
-        label="Download PNG"
-        icon="i-lucide-download"
-        :disabled="!convertedBlob || isConverting"
-        :loading="isConverting"
-        @click="downloadImage" />
-    </template>
+        <template #default>
+          <div class="p-4 space-y-6 pb-20 max-h-full overflow-y-auto custom-scrollbar">
+            <div class="space-y-4">
+              <h3 class="font-bold text-[10px] uppercase tracking-widest text-muted flex items-center gap-2 px-1">
+                <UIcon name="i-lucide-info" />
+                About SVG Conversion
+              </h3>
+              <div class="bg-elevated border border-default rounded-xl p-4">
+                <p class="text-[11px] text-muted leading-relaxed">
+                  Vector images (SVG) are mathematically defined and can be scaled infinitely.
+                  This tool renders your SVG onto a high-resolution canvas to generate a pixel-perfect PNG image.
+                </p>
+              </div>
+            </div>
 
-    <template #sidebar>
-      <div class="bg-elevated p-6 rounded-xl border border-muted space-y-4">
-        <h3 class="font-semibold text-sm">
-          About SVG Conversion
-        </h3>
-        <p class="text-xs text-muted leading-relaxed">
-          Vector images (SVG) are mathematically defined and can be scaled infinitely. This tool renders your SVG onto a high-resolution canvas to generate a pixel-perfect PNG image.
-        </p>
-      </div>
+            <div class="p-4 rounded-xl space-y-2 bg-info/5 border border-info/20 text-[11px] text-info/90">
+              <p class="font-bold text-info flex items-center gap-1 uppercase tracking-wider text-[10px]">
+                <UIcon
+                  name="i-lucide-zap"
+                  class="size-3.5" />
+                Pro Tip
+              </p>
+              <p>
+                Need a specific size? Use our
+                <NuxtLink
+                  to="/image/resizer"
+                  class="text-info underline font-medium">
+                  Image Resizer
+                </NuxtLink>
+                after converting to PNG.
+              </p>
+            </div>
 
-      <div class="p-6 rounded-xl space-y-2 bg-info/5 border border-info/20 text-xs text-info/80">
-        <p class="font-semibold text-info flex items-center gap-1">
-          <UIcon name="i-lucide-info" />
-          Pro Tip
-        </p>
-        <p>
-          Need a specific size? Use our <NuxtLink to="/image/resizer" class="text-info underline">Image Resizer</NuxtLink> after converting to PNG.
-        </p>
-      </div>
-    </template>
-  </ImgToolPage>
+            <Transition
+              enter-active-class="transition duration-300 ease-out"
+              enter-from-class="transform translate-y-2 opacity-0"
+              enter-to-class="transform translate-y-0 opacity-100"
+              leave-active-class="transition duration-200 ease-in"
+              leave-from-class="transform translate-y-0 opacity-100"
+              leave-to-class="transform translate-y-2 opacity-0"
+            >
+              <div
+                v-if="isConverting"
+                class="flex items-center gap-2 px-3 py-2 bg-primary/10 border border-primary/20 rounded-lg text-[10px] font-bold text-primary uppercase tracking-wider">
+                <UIcon
+                  name="i-lucide-loader-2"
+                  class="animate-spin" />
+                Rendering high-res PNG...
+              </div>
+            </Transition>
+          </div>
+        </template>
+      </ImgStudio>
+    </ClientOnly>
+  </div>
 </template>

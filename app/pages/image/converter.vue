@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+const editorRef = ref<any>(null)
 
 const {
   outputFormat,
@@ -11,13 +13,19 @@ const {
   formats,
 } = useImageConvert()
 
-const sourceImgRef = ref<HTMLImageElement | null>(null)
-
-const onImageLoad = (event: Event, fileType?: string) => {
-  if (sourceImgRef.value) {
-    setSource(sourceImgRef.value, fileType || 'image/jpeg')
+// Feed the original uploaded file into the converter
+watch(() => editorRef.value?.sourceFile, (file) => {
+  if (file && editorRef.value?.imageRef) {
+    setSource(editorRef.value.imageRef, file.type || 'image/jpeg')
   }
-}
+})
+
+// Update the ImgStudio canvas live without triggering history commits
+watch(convertedImageUrl, (url) => {
+  if (url && editorRef.value) {
+    editorRef.value.updateCanvas(url, true)
+  }
+})
 
 const downloadImage = () => {
   if (!convertedBlob.value) return
@@ -32,97 +40,112 @@ const downloadImage = () => {
 </script>
 
 <template>
-  <ImgToolPage
-    title="Format Converter"
-    description="Convert images between PNG, JPEG, and WebP formats instantly."
-    icon="i-lucide-refresh-ccw">
-    <template #default="{ img, fileType }">
-      <div class="relative w-full h-full flex items-center justify-center p-8 overflow-hidden">
-        <!-- Source image (hidden) -->
-        <img
-          ref="sourceImgRef"
-          :src="img"
-          class="hidden"
-          @load="onImageLoad($event, fileType)">
-
-        <!-- Live Preview -->
-        <img
-          v-if="convertedImageUrl"
-          :src="convertedImageUrl"
-          class="max-w-full max-h-full object-contain shadow-2xl transition-all duration-300"
-          :class="{ 'opacity-50 grayscale pointer-events-none scale-95': isConverting }">
-        <img
-          v-else
-          :src="img"
-          class="max-w-full max-h-full object-contain shadow-2xl">
-
-        <!-- Status Toast -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="transform translate-y-4 opacity-0"
-          enter-to-class="transform translate-y-0 opacity-100"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="transform translate-y-0 opacity-100"
-          leave-to-class="transform translate-y-4 opacity-0">
-          <div v-if="convertedImageUrl" class="absolute top-4 right-4 bg-inverted/20 border border-muted/20 backdrop-blur-xl px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold tracking-wider uppercase">
-            <UIcon :name="isConverting ? 'i-lucide-loader-2' : 'i-lucide-refresh-ccw'" :class="{ 'animate-spin': isConverting, 'text-primary': !isConverting }" />
-            {{ isConverting ? 'Converting...' : 'Converted Result' }}
-          </div>
-        </Transition>
-      </div>
-    </template>
-
-    <template #actions>
-      <UButton
-        label="Download Result"
-        icon="i-lucide-download"
-        :disabled="!convertedBlob"
-        @click="downloadImage" />
-    </template>
-
-    <template #sidebar>
-      <div class=" p-6 rounded-xl border border-muted space-y-4">
-        <h3 class="font-semibold text-sm">
-          Convert To
-        </h3>
-        <div class="space-y-2">
-          <UButton
-            v-for="format in formats"
-            :key="format.value"
-            block
-            color="neutral"
-            :variant="outputFormat === format.value ? 'subtle' : 'soft'"
-            class="justify-start text-left h-auto py-3"
-            @click="outputFormat = (format.value as any)">
+  <div class="h-[calc(100vh-var(--header-top-height,64px))] w-full flex flex-col bg-background relative">
+    <ClientOnly>
+      <ImgStudio ref="editorRef" borderless>
+        
+        <template #header>
+          <div class="flex items-center justify-between px-4 py-3 border-b border-default bg-elevated z-10">
             <div class="flex items-center gap-3">
-              <span class="text-xl">{{ format.icon }}</span>
-              <div class="flex flex-col">
-                <span class="font-medium text-highlighted">{{ format.label }}</span>
-                <span class="text-[10px] text-muted">{{ format.description }}</span>
+              <div class="p-2 border border-primary/20 bg-primary/10 rounded-lg text-primary">
+                <UIcon name="i-lucide-refresh-ccw" class="size-5" />
+              </div>
+              <div>
+                <h1 class="font-bold tracking-tight text-sm">Format Converter</h1>
+                <p class="text-[10px] text-muted">Convert images between PNG, JPEG, and WebP.</p>
               </div>
             </div>
-          </UButton>
-        </div>
-      </div>
+            
+            <div class="flex gap-2">
+              <UButton
+                label="Download Result"
+                icon="i-lucide-download"
+                color="primary"
+                size="sm"
+                :disabled="!convertedBlob"
+                @click="downloadImage" />
+            </div>
+          </div>
+          
+          <!-- Loading overlay for the whole canvas area when converting -->
+          <div
+            v-if="isConverting && editorRef?.hasImage"
+            class="absolute inset-0 top-[64px] z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm pointer-events-none transition-opacity duration-300">
+            <div class="bg-elevated border border-default p-4 rounded-xl shadow-2xl flex items-center gap-3">
+              <UIcon name="i-lucide-loader-2" class="size-5 animate-spin text-primary" />
+              <span class="text-sm font-semibold tracking-wide">Converting...</span>
+            </div>
+          </div>
+        </template>
 
-      <div v-if="outputFormat !== 'image/png'" class="bg-elevated p-6 rounded-xl border border-muted space-y-4">
-        <h3 class="font-semibold text-sm">
-          Quality Settings ({{ quality }}%)
-        </h3>
-        <USlider v-model="quality" :min="1" :max="100" />
-      </div>
+        <template #default>
+          <div class="p-4 space-y-6 pb-20">
+            
+            <div class="space-y-4">
+              <h3 class="font-bold text-xs uppercase tracking-widest text-muted flex items-center gap-2 px-1">
+                <UIcon name="i-lucide-settings-2" />
+                Convert To
+              </h3>
+              
+              <div class="space-y-2">
+                <UButton
+                  v-for="format in formats"
+                  :key="format.value"
+                  block
+                  color="neutral"
+                  :variant="outputFormat === format.value ? 'subtle' : 'soft'"
+                  class="justify-start text-left h-auto py-3 relative overflow-hidden transition-all"
+                  :class="outputFormat === format.value ? 'ring-1 ring-primary-500/50' : ''"
+                  @click="outputFormat = (format.value as any)">
+                  <div class="flex items-center gap-3 z-10 relative">
+                    <span class="text-xl">{{ format.icon }}</span>
+                    <div class="flex flex-col">
+                      <span class="font-medium" :class="outputFormat === format.value ? 'text-primary' : 'text-foreground'">{{ format.label }}</span>
+                      <span class="text-[10px] text-muted">{{ format.description }}</span>
+                    </div>
+                  </div>
+                  
+                  <!-- Active indicator background -->
+                  <div 
+                    v-if="outputFormat === format.value"
+                    class="absolute inset-0 bg-primary-500/5 z-0" />
+                </UButton>
+              </div>
+            </div>
 
-      <div class="p-6 rounded-xl border text-xs text-info/80 space-y-2 bg-info/5 border-info/20">
-        <p class="font-semibold text-info flex items-center gap-1">
-          <UIcon name="i-lucide-info" />
-          Format Guide
-        </p>
-        <ul class="list-disc pl-4 space-y-1">
-          <li>PNG: Best for logos & transparent images</li>
-          <li>JPEG: Best for photos & smaller sizes</li>
-          <li>WebP: Modern, ultra-efficient compression</li>
-        </ul>
-      </div>
-    </template>
-  </ImgToolPage>
+            <div v-if="outputFormat !== 'image/png'" class="space-y-4">
+              <UDivider class="my-2" />
+              <h3 class="font-bold text-[10px] uppercase tracking-widest text-muted flex items-center gap-2 px-1">
+                <UIcon name="i-lucide-sliders" />
+                Quality Settings
+              </h3>
+              <div class="px-1 space-y-2">
+                <div class="flex justify-between text-[11px] font-semibold text-muted">
+                  <span>Quality</span>
+                  <span>{{ quality }}%</span>
+                </div>
+                <USlider v-model="quality" :min="1" :max="100" size="sm" />
+              </div>
+            </div>
+
+            <UDivider class="my-4" />
+
+            <!-- Info Panel -->
+            <div class="p-4 rounded-xl shadow-sm border text-[11px] space-y-2 bg-info-500/5 border-info-500/20">
+              <p class="font-semibold text-info-600 dark:text-info-400 flex items-center gap-1.5 text-xs">
+                <UIcon name="i-lucide-info" class="size-4" />
+                Format Guide
+              </p>
+              <ul class="list-disc pl-4 space-y-1.5 text-info-600/80 dark:text-info-400/80 leading-relaxed">
+                <li><strong class="font-medium text-info-700 dark:text-info-300">PNG:</strong> Best for logos &amp; transparent images</li>
+                <li><strong class="font-medium text-info-700 dark:text-info-300">JPEG:</strong> Best for photos &amp; smaller sizes</li>
+                <li><strong class="font-medium text-info-700 dark:text-info-300">WebP:</strong> Modern, ultra-efficient compression</li>
+              </ul>
+            </div>
+            
+          </div>
+        </template>
+      </ImgStudio>
+    </ClientOnly>
+  </div>
 </template>

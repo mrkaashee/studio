@@ -1,5 +1,7 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
+
+const editorRef = ref<any>(null)
 
 const {
   quality,
@@ -13,13 +15,19 @@ const {
   setSource,
 } = useImageCompress()
 
-const sourceImgRef = ref<HTMLImageElement | null>(null)
-
-const onImageLoad = (event: Event, fileSize?: number) => {
-  if (sourceImgRef.value) {
-    setSource(sourceImgRef.value, fileSize || 0)
+// Feed the original uploaded file into the compressor
+watch(() => editorRef.value?.sourceFile, (file) => {
+  if (file && editorRef.value?.imageRef) {
+    setSource(editorRef.value.imageRef, file.size)
   }
-}
+})
+
+// Update the ImgStudio canvas live without triggering history commits
+watch(compressedImageUrl, (url) => {
+  if (url && editorRef.value) {
+    editorRef.value.updateCanvas(url, true)
+  }
+})
 
 const downloadImage = () => {
   if (!compressedBlob.value) return
@@ -27,7 +35,6 @@ const downloadImage = () => {
   const a = document.createElement('a')
   a.href = url
 
-  // Extension based on format
   const extMap: Record<string, string> = {
     'image/jpeg': '.jpg',
     'image/png': '.png',
@@ -50,103 +57,118 @@ const formatSize = (bytes: number) => {
 </script>
 
 <template>
-  <ImgToolPage
-    title="Image Compressor"
-    description="Optimize and reduce the file size of your images without losing quality."
-    icon="i-lucide-shrink">
-    <template #default="{ img, fileSize }">
-      <div class="relative w-full h-full flex items-center justify-center p-8 overflow-hidden">
-        <!-- Source image (hidden) -->
-        <img
-          ref="sourceImgRef"
-          :src="img"
-          class="hidden"
-          @load="onImageLoad($event, fileSize)">
-
-        <!-- Live Preview (Active result) -->
-        <img
-          v-if="compressedImageUrl"
-          :src="compressedImageUrl"
-          class="max-w-full max-h-full object-contain shadow-2xl transition-all duration-300"
-          :class="{ 'opacity-50 grayscale pointer-events-none scale-95': isCompressing }">
-        <img
-          v-else
-          :src="img"
-          class="max-w-full max-h-full object-contain shadow-2xl">
-
-        <!-- Status Toast -->
-        <Transition
-          enter-active-class="transition duration-300 ease-out"
-          enter-from-class="transform translate-y-4 opacity-0"
-          enter-to-class="transform translate-y-0 opacity-100"
-          leave-active-class="transition duration-200 ease-in"
-          leave-from-class="transform translate-y-0 opacity-100"
-          leave-to-class="transform translate-y-4 opacity-0">
-          <div v-if="compressedImageUrl" class="absolute top-4 right-4 bg-inverted/20 border border-muted/20 backdrop-blur-xl px-4 py-2 rounded-full flex items-center gap-2 text-[10px] font-bold tracking-wider uppercase">
-            <UIcon :name="isCompressing ? 'i-lucide-loader-2' : 'i-lucide-zap'" :class="{ 'animate-spin': isCompressing, 'text-primary': !isCompressing }" />
-            {{ isCompressing ? 'Optimizing...' : 'Previewing Result' }}
+  <div class="h-[calc(100vh-var(--header-top-height,64px))] w-full flex flex-col bg-background relative">
+    <ClientOnly>
+      <ImgStudio ref="editorRef" borderless>
+        
+        <template #header>
+          <div class="flex items-center justify-between px-4 py-3 border-b border-default bg-elevated z-10">
+            <div class="flex items-center gap-3">
+              <div class="p-2 border border-primary/20 bg-primary/10 rounded-lg text-primary">
+                <UIcon name="i-lucide-shrink" class="size-5" />
+              </div>
+              <div>
+                <h1 class="font-bold tracking-tight text-sm">Image Compressor</h1>
+                <p class="text-[10px] text-muted">Optimize file size without losing quality.</p>
+              </div>
+            </div>
+            
+            <div class="flex gap-2">
+              <UButton
+                label="Download Optimized Image"
+                icon="i-lucide-download"
+                color="primary"
+                size="sm"
+                :disabled="!compressedBlob"
+                @click="downloadImage" />
+            </div>
           </div>
-        </Transition>
-      </div>
-    </template>
-
-    <template #actions>
-      <UButton
-        label="Download Optimized Image"
-        icon="i-lucide-download"
-        :disabled="!compressedBlob"
-        @click="downloadImage" />
-    </template>
-
-    <template #sidebar>
-      <div class="bg-elevated p-6 rounded-xl border border-muted space-y-4">
-        <h3 class="font-semibold text-sm">
-          Compression Level ({{ quality }}%)
-        </h3>
-        <USlider v-model="quality" :min="1" :max="100" />
-        <div class="flex justify-between text-[11px] text-muted">
-          <span>Smaller</span>
-          <span>Better Quality</span>
-        </div>
-      </div>
-
-      <div class="bg-elevated p-6 rounded-xl border border-muted space-y-4">
-        <h3 class="font-semibold text-sm">
-          Output Format
-        </h3>
-        <USelect
-          v-model="format"
-          :items="[
-            { label: 'JPEG (Recommended)', value: 'image/jpeg' },
-            { label: 'WebP (Ultra Efficient)', value: 'image/webp' },
-            { label: 'PNG (Lossless)', value: 'image/png' },
-          ]"
-          value-attribute="value" />
-      </div>
-
-      <div class="bg-elevated p-6 rounded-xl border border-muted space-y-4">
-        <h3 class="font-semibold text-sm">
-          Results
-        </h3>
-        <div class="space-y-3">
-          <div class="flex justify-between text-sm">
-            <span class="text-muted">Original:</span>
-            <span class="font-medium">{{ formatSize(originalSize) }}</span>
+          
+          <!-- Loading overlay for the whole canvas area when compressing -->
+          <div
+            v-if="isCompressing"
+            class="absolute inset-0 top-[64px] z-20 flex items-center justify-center bg-background/50 backdrop-blur-sm pointer-events-none transition-opacity duration-300">
+            <div class="bg-elevated border border-default p-4 rounded-xl shadow-2xl flex items-center gap-3">
+              <UIcon name="i-lucide-loader-2" class="size-5 animate-spin text-primary" />
+              <span class="text-sm font-semibold tracking-wide">Optimizing...</span>
+            </div>
           </div>
-          <div class="flex justify-between text-sm">
-            <span class="text-muted">Compressed:</span>
-            <span class="font-medium text-primary">{{ formatSize(compressedSize) }}</span>
+        </template>
+
+        <template #default>
+          <div class="p-4 space-y-6 pb-20">
+            
+            <div class="space-y-4">
+              <h3 class="font-bold text-xs uppercase tracking-widest text-muted flex items-center gap-2 px-1">
+                <UIcon name="i-lucide-settings-2" />
+                Compression &amp; Format
+              </h3>
+              
+              <div class="space-y-2 px-1">
+                <div class="flex justify-between text-[11px] font-semibold text-muted">
+                  <span>Quality</span>
+                  <span>{{ quality }}%</span>
+                </div>
+                <USlider v-model="quality" :min="1" :max="100" size="sm" />
+                <div class="flex justify-between text-[10px] text-muted font-medium">
+                  <span>Smaller File</span>
+                  <span>Better Quality</span>
+                </div>
+              </div>
+
+              <div class="space-y-2 pt-2 px-1">
+                <div class="text-[11px] font-semibold text-muted">Output Format</div>
+                <USelect
+                  v-model="format"
+                  :items="[
+                    { label: 'JPEG (Recommended)', value: 'image/jpeg' },
+                    { label: 'WebP (Ultra Efficient)', value: 'image/webp' },
+                    { label: 'PNG (Lossless)', value: 'image/png' },
+                  ]"
+                  value-attribute="value"
+                  size="sm" />
+              </div>
+            </div>
+
+            <UDivider class="my-4" />
+
+            <!-- Results Panel -->
+            <div class="space-y-4">
+              <h3 class="font-bold text-[10px] uppercase tracking-widest text-muted flex items-center gap-2 px-1">
+                <UIcon name="i-lucide-bar-chart-2" />
+                Results
+              </h3>
+              
+              <div class="bg-elevated border border-default p-4 rounded-xl space-y-4">
+                <div class="space-y-2">
+                  <div class="flex justify-between text-xs">
+                    <span class="text-muted font-medium">Original</span>
+                    <span class="font-bold">{{ formatSize(originalSize) }}</span>
+                  </div>
+                  <div class="flex justify-between text-xs">
+                    <span class="text-muted font-medium">Compressed</span>
+                    <span class="font-bold text-primary">{{ formatSize(compressedSize) }}</span>
+                  </div>
+                </div>
+                
+                <div class="space-y-1">
+                  <div class="h-2 w-full bg-muted rounded-full overflow-hidden">
+                    <div
+                      class="h-full bg-primary transition-all duration-500 ease-out"
+                      :style="{ width: `${compressionRatio}%` }" />
+                  </div>
+                  <div class="flex justify-center pt-1">
+                    <p class="text-[10px] text-primary font-bold uppercase tracking-wider">
+                      Reduced by {{ compressionRatio }}%
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
           </div>
-          <div class="h-2 w-full bg-muted rounded-full overflow-hidden">
-            <div
-              class="h-full bg-primary transition-all duration-500"
-              :style="{ width: `${compressionRatio}%` }" />
-          </div>
-          <p class="text-center text-xs text-primary font-bold">
-            Reduced by {{ compressionRatio }}%
-          </p>
-        </div>
-      </div>
-    </template>
-  </ImgToolPage>
+        </template>
+      </ImgStudio>
+    </ClientOnly>
+  </div>
 </template>

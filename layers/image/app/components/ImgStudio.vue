@@ -900,6 +900,7 @@ const editorAPI = {
   isWorkerProcessing,
   processImage,
   handlerCfg,
+  sourceFile,
 }
 
 // Provide context to child tools
@@ -967,6 +968,7 @@ defineExpose({
   triggerFileInput,
   getCurrentCoordinates,
   handlerCfg,
+  sourceFile,
 })
 </script>
 
@@ -1192,258 +1194,277 @@ defineExpose({
             leave-active-class="transition-all duration-300 ease-in absolute"
             leave-to-class="opacity-0 -translate-x-4 blur-sm"
             move-class="transition-all duration-400 ease-in-out">
-            <UCard v-if="props.preview" key="preview" class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg border-white/30 dark:border-white/10 shadow-md" :ui="{ body: 'p-3' }">
-              <ImgPreview v-bind="typeof props.preview === 'object' ? props.preview : {}" />
-            </UCard>
+            <slot name="preview" :editor="editorAPI" :preview-props="typeof props.preview === 'object' ? props.preview : {}">
+              <UCard v-if="props.preview" key="preview" class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg border-white/30 dark:border-white/10 shadow-md" :ui="{ body: 'p-3' }">
+                <ImgPreview v-bind="typeof props.preview === 'object' ? props.preview : {}" />
+              </UCard>
+            </slot>
 
-            <UCard v-if="props.layers" key="layers" class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg border-white/30 dark:border-white/10 shadow-md" :ui="{ body: 'p-3' }">
-              <ImgLayerManager v-bind="typeof props.layers === 'object' ? props.layers : {}" />
-            </UCard>
+            <slot name="layers" :editor="editorAPI" :layers-props="typeof props.layers === 'object' ? props.layers : {}">
+              <UCard v-if="props.layers" key="layers" class="bg-white/70 dark:bg-slate-900/70 backdrop-blur-lg border-white/30 dark:border-white/10 shadow-md" :ui="{ body: 'p-3' }">
+                <ImgLayerManager v-bind="typeof props.layers === 'object' ? props.layers : {}" />
+              </UCard>
+            </slot>
 
-            <ImgAnnotate v-if="props.annotate" key="annotate" v-bind="typeof props.annotate === 'object' ? props.annotate : {}" />
+            <slot name="annotate" :editor="editorAPI" :annotate-props="typeof props.annotate === 'object' ? props.annotate : {}">
+              <ImgAnnotate v-if="props.annotate" key="annotate" v-bind="typeof props.annotate === 'object' ? props.annotate : {}" />
+            </slot>
 
-            <ImgAspectPresets v-if="props.aspect" key="aspect" v-bind="typeof props.aspect === 'object' ? props.aspect : {}" />
+            <slot name="aspect" :editor="editorAPI" :aspect-props="typeof props.aspect === 'object' ? props.aspect : {}">
+              <ImgAspectPresets v-if="props.aspect" key="aspect" v-bind="typeof props.aspect === 'object' ? props.aspect : {}" />
+            </slot>
 
-            <ImgCensor v-if="props.censor" key="censor" v-bind="typeof props.censor === 'object' ? props.censor : {}" />
+            <slot name="censor" :editor="editorAPI" :censor-props="typeof props.censor === 'object' ? props.censor : {}">
+              <ImgCensor v-if="props.censor" key="censor" v-bind="typeof props.censor === 'object' ? props.censor : {}" />
+            </slot>
 
             <!-- Cropper Logic -->
-            <div v-if="props.cropper" key="cropper" class="space-y-4">
-              <div class="flex items-center justify-between px-1">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">
-                  Crop &amp; Aspect
-                </h3>
-                <UBadge v-if="['stencil-rect', 'stencil-circle'].includes(activeTool || '')" color="primary" size="xs" variant="subtle" class="animate-pulse">
-                  Active
-                </UBadge>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2">
-                <UButton
-                  :color="activeTool === 'stencil-rect' ? 'primary' : 'neutral'"
-                  variant="subtle"
-                  icon="i-lucide-square"
-                  label="Square"
-                  class="h-10"
-                  @click="() => activateTool('stencil-rect')" />
-                <UButton
-                  :color="activeTool === 'stencil-circle' ? 'primary' : 'neutral'"
-                  variant="subtle"
-                  icon="i-lucide-circle"
-                  label="Circle"
-                  class="h-10"
-                  @click="() => activateTool('stencil-circle')" />
-              </div>
-
-              <UButton
-                v-if="['stencil-rect', 'stencil-circle'].includes(activeTool || '')"
-                label="Apply Crop"
-                icon="i-lucide-check"
-                color="primary"
-                block
-                size="lg"
-                class="shadow-lg shadow-primary-500/20"
-                @click="() => deactivateTool()" />
-
-              <RectangleStencil v-if="activeTool === 'stencil-rect'" key="stencil-rect" v-bind="typeof props.cropper === 'object' ? props.cropper : {}" />
-              <CircleStencil v-if="activeTool === 'stencil-circle'" key="stencil-circle" v-bind="typeof props.cropper === 'object' ? props.cropper : {}" />
-            </div>
-
-            <ImgTransform v-if="props.transform" key="transform" v-bind="typeof props.transform === 'object' ? props.transform : {}" v-slot="{ rotate, flipHorizontal, flipVertical, currentTransform }">
-              <div class="space-y-2">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted px-1">
-                  Transform
-                </h3>
-                <div class="grid grid-cols-4 gap-2">
-                  <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" title="Rotate -90" @click="rotate(-90)" />
-                  <UButton icon="i-lucide-rotate-cw" color="neutral" variant="subtle" title="Rotate +90" @click="rotate(90)" />
-                  <UButton icon="i-lucide-flip-horizontal" :color="currentTransform.flipHorizontal ? 'primary' : 'neutral'" variant="subtle" title="Flip X" @click="flipHorizontal" />
-                  <UButton icon="i-lucide-flip-vertical" :color="currentTransform.flipVertical ? 'primary' : 'neutral'" variant="subtle" title="Flip Y" @click="flipVertical" />
-                </div>
-              </div>
-            </ImgTransform>
-
-            <ImgResize v-if="props.resize" key="resize" v-bind="typeof props.resize === 'object' ? props.resize : {}" v-slot="{ applyResize }">
-              <div class="space-y-2">
-                <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted px-1">
-                  Quick Sizes
-                </h3>
-                <div class="grid grid-cols-3 gap-1">
-                  <template v-if="typeof props.resize === 'object' && props.resize.presets">
-                    <UButton
-                      v-for="preset in props.resize.presets"
-                      :key="preset.label"
-                      :label="preset.label"
-                      size="xs"
-                      color="neutral"
-                      variant="subtle"
-                      @click="applyResize(preset.width, preset.height)" />
-                  </template>
-                  <template v-else>
-                    <UButton label="SD" size="xs" color="neutral" variant="subtle" @click="applyResize(800, 600)" />
-                    <UButton label="HD" size="xs" color="neutral" variant="subtle" @click="applyResize(1280, 720)" />
-                    <UButton label="FHD" size="xs" color="neutral" variant="subtle" @click="applyResize(1920, 1080)" />
-                  </template>
-                </div>
-              </div>
-            </ImgResize>
-
-            <ImgFilter v-if="props.filter" key="filter" v-bind="typeof props.filter === 'object' ? props.filter : {}" v-slot="{ applyFilter, currentFilters, resetFilters }">
-              <div class="space-y-4 pt-2">
+            <slot name="cropper" :editor="editorAPI" :cropper-props="typeof props.cropper === 'object' ? props.cropper : {}">
+              <div v-if="props.cropper" key="cropper" class="space-y-4">
                 <div class="flex items-center justify-between px-1">
                   <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">
-                    Filters &amp; Effects
+                    Crop &amp; Aspect
                   </h3>
+                  <UBadge v-if="['stencil-rect', 'stencil-circle'].includes(activeTool || '')" color="primary" size="xs" variant="subtle" class="animate-pulse">
+                    Active
+                  </UBadge>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2">
                   <UButton
-                    label="Reset Filters"
+                    :color="activeTool === 'stencil-rect' ? 'primary' : 'neutral'"
                     variant="subtle"
-                    color="error"
-                    size="xs"
-                    icon="i-lucide-rotate-ccw"
-                    @click="resetFilters" />
-                </div>
-
-                <!-- Presets Gallery -->
-                <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+                    icon="i-lucide-square"
+                    label="Square"
+                    class="h-10"
+                    @click="() => activateTool('stencil-rect')" />
                   <UButton
-                    v-for="preset in PRESET_FILTERS"
-                    :key="preset.id"
-                    :icon="preset.id === 'none' ? 'i-lucide-image' : 'i-lucide-sparkles'"
-                    :label="preset.label"
-                    :variant="currentFilters.lastPreset === preset.id ? 'solid' : 'subtle'"
-                    :color="currentFilters.lastPreset === preset.id ? 'primary' : 'neutral'"
-                    @click="preset.id === 'none' ? (resetFilters(), currentFilters.lastPreset = 'none') : (applyFilter(preset.preset), currentFilters.lastPreset = preset.id)" />
+                    :color="activeTool === 'stencil-circle' ? 'primary' : 'neutral'"
+                    variant="subtle"
+                    icon="i-lucide-circle"
+                    label="Circle"
+                    class="h-10"
+                    @click="() => activateTool('stencil-circle')" />
                 </div>
 
-                <UAccordion
-                  multiple
-                  :items="[
-                    { label: 'Basic', icon: 'i-lucide-sliders', slot: 'basic', defaultOpen: true },
-                    { label: 'Color', icon: 'i-lucide-palette', slot: 'color' },
-                    { label: 'Light', icon: 'i-lucide-sun', slot: 'light' },
-                    { label: 'Detail', icon: 'i-lucide-zap', slot: 'detail' },
-                  ]"
-                  :ui="{
-                    trigger: 'px-3 py-2 text-[10px] font-bold uppercase tracking-widest',
-                  }">
-                  <template #basic>
-                    <div class="p-3 space-y-4">
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Brightness</span>
-                          <span class="text-primary-500">{{ currentFilters.brightness }}%</span>
-                        </div>
-                        <USlider v-model="currentFilters.brightness" :min="0" :max="200" size="sm" @update:model-value="applyFilter({ brightness: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Contrast</span>
-                          <span class="text-primary-500">{{ currentFilters.contrast }}%</span>
-                        </div>
-                        <USlider v-model="currentFilters.contrast" :min="0" :max="200" size="sm" @update:model-value="applyFilter({ contrast: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Saturation</span>
-                          <span class="text-primary-500">{{ currentFilters.saturate }}%</span>
-                        </div>
-                        <USlider v-model="currentFilters.saturate" :min="0" :max="200" size="sm" @update:model-value="applyFilter({ saturate: $event })" />
-                      </div>
-                    </div>
-                  </template>
-                  <template #color>
-                    <div class="p-3 space-y-4">
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Temperature</span>
-                          <span class="text-primary-500">{{ (currentFilters.temperature || 0) > 0 ? 'Warm' : 'Cool' }} ({{ currentFilters.temperature }})</span>
-                        </div>
-                        <USlider v-model="currentFilters.temperature" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ temperature: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Tint</span>
-                          <span class="text-primary-500">{{ currentFilters.tint }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.tint" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ tint: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Vibrance</span>
-                          <span class="text-primary-500">{{ currentFilters.vibrance }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.vibrance" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ vibrance: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Hue Rotate</span>
-                          <span class="text-primary-500">{{ currentFilters.hueRotate }}°</span>
-                        </div>
-                        <USlider v-model="currentFilters.hueRotate" :min="0" :max="360" size="sm" @update:model-value="applyFilter({ hueRotate: $event })" />
-                      </div>
-                    </div>
-                  </template>
+                <UButton
+                  v-if="['stencil-rect', 'stencil-circle'].includes(activeTool || '')"
+                  label="Apply Crop"
+                  icon="i-lucide-check"
+                  color="primary"
+                  block
+                  size="lg"
+                  class="shadow-lg shadow-primary-500/20"
+                  @click="() => deactivateTool()" />
 
-                  <template #light>
-                    <div class="p-3 space-y-4">
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Exposure</span>
-                          <span class="text-primary-500">{{ currentFilters.exposure }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.exposure" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ exposure: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Highlights</span>
-                          <span class="text-primary-500">{{ currentFilters.highlights }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.highlights" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ highlights: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Shadows</span>
-                          <span class="text-primary-500">{{ currentFilters.shadows }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.shadows" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ shadows: $event })" />
-                      </div>
-                      <div class="grid grid-cols-2 gap-3">
-                        <div>
-                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                            <span>Whites</span>
-                          </div>
-                          <USlider v-model="currentFilters.whites" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ whites: $event })" />
-                        </div>
-                        <div>
-                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                            <span>Blacks</span>
-                          </div>
-                          <USlider v-model="currentFilters.blacks" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ blacks: $event })" />
-                        </div>
-                      </div>
-                    </div>
-                  </template>
-
-                  <template #detail>
-                    <div class="p-3 space-y-4">
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Clarity</span>
-                          <span class="text-primary-500">{{ currentFilters.clarity }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.clarity" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ clarity: $event })" />
-                      </div>
-                      <div>
-                        <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
-                          <span>Sharpen</span>
-                          <span class="text-primary-500">{{ currentFilters.sharpen }}</span>
-                        </div>
-                        <USlider v-model="currentFilters.sharpen" :min="0" :max="100" size="sm" @update:model-value="applyFilter({ sharpen: $event })" />
-                      </div>
-                    </div>
-                  </template>
-                </UAccordion>
+                <RectangleStencil v-if="activeTool === 'stencil-rect'" key="stencil-rect" v-bind="typeof props.cropper === 'object' ? props.cropper : {}" />
+                <CircleStencil v-if="activeTool === 'stencil-circle'" key="stencil-circle" v-bind="typeof props.cropper === 'object' ? props.cropper : {}" />
               </div>
-            </ImgFilter>
+            </slot>
+
+            <slot name="transform" :editor="editorAPI" :transform-props="typeof props.transform === 'object' ? props.transform : {}">
+              <ImgTransform v-if="props.transform" key="transform" v-bind="typeof props.transform === 'object' ? props.transform : {}" v-slot="{ rotate, flipHorizontal, flipVertical, currentTransform }">
+                <div class="space-y-2">
+                  <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted px-1">
+                    Transform
+                  </h3>
+                  <div class="grid grid-cols-4 gap-2">
+                    <UButton icon="i-lucide-rotate-ccw" color="neutral" variant="subtle" title="Rotate -90" @click="rotate(-90)" />
+                    <UButton icon="i-lucide-rotate-cw" color="neutral" variant="subtle" title="Rotate +90" @click="rotate(90)" />
+                    <UButton icon="i-lucide-flip-horizontal" :color="currentTransform.flipHorizontal ? 'primary' : 'neutral'" variant="subtle" title="Flip X" @click="flipHorizontal" />
+                    <UButton icon="i-lucide-flip-vertical" :color="currentTransform.flipVertical ? 'primary' : 'neutral'" variant="subtle" title="Flip Y" @click="flipVertical" />
+                  </div>
+                </div>
+              </ImgTransform>
+            </slot>
+
+            <slot name="resize" :editor="editorAPI" :resize-props="typeof props.resize === 'object' ? props.resize : {}">
+              <ImgResize v-if="props.resize" key="resize" v-bind="typeof props.resize === 'object' ? props.resize : {}" v-slot="{ applyResize }">
+                <div class="space-y-2">
+                  <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted px-1">
+                    Quick Sizes
+                  </h3>
+                  <div class="grid grid-cols-3 gap-1">
+                    <template v-if="typeof props.resize === 'object' && props.resize.presets">
+                      <UButton
+                        v-for="preset in props.resize.presets"
+                        :key="preset.label"
+                        :label="preset.label"
+                        size="xs"
+                        color="neutral"
+                        variant="subtle"
+                        @click="applyResize(preset.width, preset.height)" />
+                    </template>
+                    <template v-else>
+                      <UButton label="SD" size="xs" color="neutral" variant="subtle" @click="applyResize(800, 600)" />
+                      <UButton label="HD" size="xs" color="neutral" variant="subtle" @click="applyResize(1280, 720)" />
+                      <UButton label="FHD" size="xs" color="neutral" variant="subtle" @click="applyResize(1920, 1080)" />
+                    </template>
+                  </div>
+                </div>
+              </ImgResize>
+            </slot>
+
+            <!-- Filter -->
+            <slot name="filter" :editor="editorAPI" :filter-props="typeof props.filter === 'object' ? props.filter : {}">
+              <ImgFilter v-if="props.filter" key="filter" v-bind="typeof props.filter === 'object' ? props.filter : {}" v-slot="{ applyFilter, currentFilters, resetFilters }">
+                <div class="space-y-4 pt-2">
+                  <div class="flex items-center justify-between px-1">
+                    <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">
+                      Filters &amp; Effects
+                    </h3>
+                    <UButton
+                      label="Reset Filters"
+                      variant="subtle"
+                      color="error"
+                      size="xs"
+                      icon="i-lucide-rotate-ccw"
+                      @click="resetFilters" />
+                  </div>
+
+                  <!-- Presets Gallery -->
+                  <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide px-1">
+                    <UButton
+                      v-for="preset in PRESET_FILTERS"
+                      :key="preset.id"
+                      :icon="preset.id === 'none' ? 'i-lucide-image' : 'i-lucide-sparkles'"
+                      :label="preset.label"
+                      :variant="currentFilters.lastPreset === preset.id ? 'solid' : 'subtle'"
+                      :color="currentFilters.lastPreset === preset.id ? 'primary' : 'neutral'"
+                      @click="preset.id === 'none' ? (resetFilters(), currentFilters.lastPreset = 'none') : (applyFilter(preset.preset), currentFilters.lastPreset = preset.id)" />
+                  </div>
+
+                  <UAccordion
+                    multiple
+                    :items="[
+                      { label: 'Basic', icon: 'i-lucide-sliders', slot: 'basic', defaultOpen: true },
+                      { label: 'Color', icon: 'i-lucide-palette', slot: 'color' },
+                      { label: 'Light', icon: 'i-lucide-sun', slot: 'light' },
+                      { label: 'Detail', icon: 'i-lucide-zap', slot: 'detail' },
+                    ]"
+                    :ui="{
+                      trigger: 'px-3 py-2 text-[10px] font-bold uppercase tracking-widest',
+                    }">
+                    <template #basic>
+                      <div class="p-3 space-y-4">
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Brightness</span>
+                            <span class="text-primary-500">{{ currentFilters.brightness }}%</span>
+                          </div>
+                          <USlider v-model="currentFilters.brightness" :min="0" :max="200" size="sm" @update:model-value="applyFilter({ brightness: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Contrast</span>
+                            <span class="text-primary-500">{{ currentFilters.contrast }}%</span>
+                          </div>
+                          <USlider v-model="currentFilters.contrast" :min="0" :max="200" size="sm" @update:model-value="applyFilter({ contrast: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Saturation</span>
+                            <span class="text-primary-500">{{ currentFilters.saturate }}%</span>
+                          </div>
+                          <USlider v-model="currentFilters.saturate" :min="0" :max="200" size="sm" @update:model-value="applyFilter({ saturate: $event })" />
+                        </div>
+                      </div>
+                    </template>
+                    <template #color>
+                      <div class="p-3 space-y-4">
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Temperature</span>
+                            <span class="text-primary-500">{{ (currentFilters.temperature || 0) > 0 ? 'Warm' : 'Cool' }} ({{ currentFilters.temperature }})</span>
+                          </div>
+                          <USlider v-model="currentFilters.temperature" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ temperature: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Tint</span>
+                            <span class="text-primary-500">{{ currentFilters.tint }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.tint" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ tint: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Vibrance</span>
+                            <span class="text-primary-500">{{ currentFilters.vibrance }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.vibrance" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ vibrance: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Hue Rotate</span>
+                            <span class="text-primary-500">{{ currentFilters.hueRotate }}°</span>
+                          </div>
+                          <USlider v-model="currentFilters.hueRotate" :min="0" :max="360" size="sm" @update:model-value="applyFilter({ hueRotate: $event })" />
+                        </div>
+                      </div>
+                    </template>
+
+                    <template #light>
+                      <div class="p-3 space-y-4">
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Exposure</span>
+                            <span class="text-primary-500">{{ currentFilters.exposure }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.exposure" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ exposure: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Highlights</span>
+                            <span class="text-primary-500">{{ currentFilters.highlights }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.highlights" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ highlights: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Shadows</span>
+                            <span class="text-primary-500">{{ currentFilters.shadows }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.shadows" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ shadows: $event })" />
+                        </div>
+                        <div class="grid grid-cols-2 gap-3">
+                          <div>
+                            <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                              <span>Whites</span>
+                            </div>
+                            <USlider v-model="currentFilters.whites" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ whites: $event })" />
+                          </div>
+                          <div>
+                            <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                              <span>Blacks</span>
+                            </div>
+                            <USlider v-model="currentFilters.blacks" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ blacks: $event })" />
+                          </div>
+                        </div>
+                      </div>
+                    </template>
+
+                    <template #detail>
+                      <div class="p-3 space-y-4">
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Clarity</span>
+                            <span class="text-primary-500">{{ currentFilters.clarity }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.clarity" :min="-100" :max="100" size="sm" @update:model-value="applyFilter({ clarity: $event })" />
+                        </div>
+                        <div>
+                          <div class="flex justify-between text-[10px] text-muted mb-2 uppercase font-medium">
+                            <span>Sharpen</span>
+                            <span class="text-primary-500">{{ currentFilters.sharpen }}</span>
+                          </div>
+                          <USlider v-model="currentFilters.sharpen" :min="0" :max="100" size="sm" @update:model-value="applyFilter({ sharpen: $event })" />
+                        </div>
+                      </div>
+                    </template>
+                  </UAccordion>
+                </div>
+              </ImgFilter>
+            </slot>
 
             <!-- Custom User Slot Content -->
             <slot :editor="editorAPI" />
