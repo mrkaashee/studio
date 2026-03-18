@@ -341,7 +341,7 @@ defineExpose({
 
         <!-- Resize Handle -->
         <ImgHandler
-          position="br"
+          position="bottom-right"
           :active="isInteracting"
           @mousedown.stop="startInteractionHandler($event, 'resize')"
           @touchstart.stop="startInteractionHandler($event, 'resize')" />

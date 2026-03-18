@@ -112,6 +112,8 @@ export interface ImageEditorContext {
   hasImage: ComputedRef<boolean> | Ref<boolean>
   isWorkerProcessing: Ref<boolean>
   processImage: (imageData: ImageData, settings: FilterOptions) => Promise<ImageData>
+  /** Handler (resize dot) configuration passed down from :handler prop on ImgStudio */
+  handlerCfg?: ComputedRef<StudioHandlerProps | null>
 }
 
 // Global Component State Types
@@ -157,7 +159,7 @@ export interface AspectPreset {
 }
 
 export interface ImgHandlerProps {
-  position: 'tl' | 'tr' | 'bl' | 'br' | 't' | 'b' | 'l' | 'r'
+  position: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | 'top' | 'bottom' | 'left' | 'right'
   active?: boolean
 }
 
@@ -209,4 +211,15 @@ export interface StudioFloatingBarProps {
   hide?: boolean
   position?: 'top' | 'bottom'
   actions?: ('zoom' | 'history' | 'reset' | 'fit')[]
+}
+
+export interface StudioHandlerProps {
+  /** Custom size class for the handler dot */
+  size?: 'sm' | 'md' | 'lg'
+  /** Custom color for the handler dot — e.g. '#ff0000' or a CSS variable */
+  color?: string
+  /** Custom border color */
+  borderColor?: string
+  /** Additional CSS class to apply to each handler */
+  class?: string
 }

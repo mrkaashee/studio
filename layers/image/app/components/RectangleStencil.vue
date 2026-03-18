@@ -191,17 +191,17 @@ defineExpose({
         <div class="absolute inset-0 border border-inverted shadow-[0_0_15px_--theme(--color-primary-500/0.3),inset_0_0_10px_--theme(--color-primary-500/0.2)] transition-all duration-200 group-[.is-interacting]:border-primary group-[.is-interacting]:border-[1.5px]" />
 
         <!-- High-end Handlers -->
-        <ImgHandler position="tl" @mousedown.stop="startInteractionHandler($event, 'resize', 'tl')" />
-        <ImgHandler position="tr" @mousedown.stop="startInteractionHandler($event, 'resize', 'tr')" />
-        <ImgHandler position="bl" @mousedown.stop="startInteractionHandler($event, 'resize', 'bl')" />
-        <ImgHandler position="br" @mousedown.stop="startInteractionHandler($event, 'resize', 'br')" />
+        <ImgHandler position="top-left" @mousedown.stop="startInteractionHandler($event, 'resize', 'tl')" />
+        <ImgHandler position="top-right" @mousedown.stop="startInteractionHandler($event, 'resize', 'tr')" />
+        <ImgHandler position="bottom-left" @mousedown.stop="startInteractionHandler($event, 'resize', 'bl')" />
+        <ImgHandler position="bottom-right" @mousedown.stop="startInteractionHandler($event, 'resize', 'br')" />
 
         <!-- Edge Handlers for non-fixed AR -->
         <template v-if="!imgStudio?.aspectRatio.value">
-          <ImgHandler position="t" @mousedown.stop="startInteractionHandler($event, 'resize', 't')" />
-          <ImgHandler position="b" @mousedown.stop="startInteractionHandler($event, 'resize', 'b')" />
-          <ImgHandler position="l" @mousedown.stop="startInteractionHandler($event, 'resize', 'l')" />
-          <ImgHandler position="r" @mousedown.stop="startInteractionHandler($event, 'resize', 'r')" />
+          <ImgHandler position="top" @mousedown.stop="startInteractionHandler($event, 'resize', 't')" />
+          <ImgHandler position="bottom" @mousedown.stop="startInteractionHandler($event, 'resize', 'b')" />
+          <ImgHandler position="left" @mousedown.stop="startInteractionHandler($event, 'resize', 'l')" />
+          <ImgHandler position="right" @mousedown.stop="startInteractionHandler($event, 'resize', 'r')" />
         </template>
       </div>
     </div>

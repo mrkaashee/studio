@@ -4,7 +4,7 @@ import { useResizeObserver, useEventListener, useElementSize, useManualRefHistor
 import { useInteraction } from '../composables/useInteraction'
 import { useWorkerProcessor } from '../composables/useWorkerProcessor'
 import { PRESET_FILTERS } from '../composables/useImageProcessor'
-import type { Layer, ImageState, ChangeEvent, CropArea, StudioCanvasProps, StudioStencilProps, StudioDragProps, StudioZoomProps, StudioToolbarProps, StudioUploaderProps, StudioFloatingBarProps } from '../types/editor'
+import type { Layer, ImageState, ChangeEvent, CropArea, StudioCanvasProps, StudioStencilProps, StudioDragProps, StudioZoomProps, StudioToolbarProps, StudioUploaderProps, StudioFloatingBarProps, StudioHandlerProps } from '../types/editor'
 
 const props = defineProps<{
   src?: string | null
@@ -34,6 +34,8 @@ const props = defineProps<{
   transform?: boolean | Record<string, unknown>
   resize?: boolean | Record<string, unknown>
   filter?: boolean | Record<string, unknown>
+  /** Resize handle dot appearance: size, color, borderColor, class */
+  handler?: boolean | StudioHandlerProps
   // ─── v-model ─────────────────────────────────────────────────────
   activeTool?: string | null
 }>()
@@ -89,6 +91,7 @@ const uploaderOnly = computed((): boolean => {
   if (!uploaderCfg.value) return false
   return uploaderCfg.value.hideIfHasImage === true
 })
+const handlerCfg = computed(() => resolve<StudioHandlerProps>(props.handler))
 // floatingBar
 const showFloatingBar = computed(() => floatingBarCfg.value !== null && floatingBarCfg.value?.hide !== true)
 const floatingBarPosition = computed(() => floatingBarCfg.value?.position ?? 'bottom')
@@ -894,6 +897,7 @@ const editorAPI = {
   hasImage,
   isWorkerProcessing,
   processImage,
+  handlerCfg,
 }
 
 // Provide context to child tools
@@ -960,6 +964,7 @@ defineExpose({
   processImage,
   triggerFileInput,
   getCurrentCoordinates,
+  handlerCfg,
 })
 </script>
 
