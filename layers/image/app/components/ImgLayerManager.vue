@@ -7,7 +7,7 @@ import type { ImageEditorContext, Layer } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioLayers = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioLayers = ComponentConfig<typeof theme, AppConfig, 'layers'>
 
 export interface StudioLayersProps {
   headless?: boolean
@@ -22,7 +22,7 @@ const props = defineProps<StudioLayersProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.layers || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.layers || {}) })())
 
 const layers = computed(() => imgStudio?.layers.value || [])
 

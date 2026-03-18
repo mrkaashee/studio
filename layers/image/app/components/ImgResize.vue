@@ -7,7 +7,7 @@ import type { ImageEditorContext } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioResize = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioResize = ComponentConfig<typeof theme, AppConfig, 'resize'>
 
 export interface StudioResizeProps {
   headless?: boolean
@@ -23,7 +23,7 @@ const props = defineProps<StudioResizeProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.resize || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.resize || {}) })())
 
 const applyResize = (maxWidth: number, maxHeight: number) => {
   const canvas = imgStudio?.getCanvas()

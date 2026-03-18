@@ -7,7 +7,7 @@ import type { ImageEditorContext, AspectPreset } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioAspect = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioAspect = ComponentConfig<typeof theme, AppConfig, 'aspect'>
 
 export interface StudioAspectProps {
   headless?: boolean
@@ -23,7 +23,7 @@ const props = defineProps<StudioAspectProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.aspect || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.aspect || {}) })({ }))
 
 const defaultPresets: AspectPreset[] = [
   { id: 'ig-post', name: 'IG Post', icon: 'i-simple-icons-instagram', ratio: 1 / 1, platform: 'Instagram' },

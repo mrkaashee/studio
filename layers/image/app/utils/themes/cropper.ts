@@ -9,12 +9,58 @@ export default {
     zoomPercentage: 'min-w-12 text-center text-inverted text-[11px] font-bold px-2 select-none',
     viewport: 'absolute inset-0',
     bgImage: 'absolute block pointer-events-none max-w-none transition-opacity duration-200 blur-xs',
-    stencil: 'absolute box-border border-2 border-inverted/85 shadow-[0_0_0_9999px_--theme(--color-inverted/0.45)] transition-shadow duration-150',
+    stencil: 'absolute box-border border-2 border-inverted/85 shadow-[0_0_0_9999px_rgba(var(--color-inverted-950),0.45)] transition-shadow duration-150',
     stencilWrapper: 'absolute inset-0 overflow-hidden',
     stencilImage: 'absolute block pointer-events-none max-w-none',
     circleHandle: 'absolute -inset-3 rounded-full border-16 border-transparent z-20 pointer-events-auto transition-colors duration-200 hover:border-primary/15',
     handle: 'absolute w-2.75 h-2.75 bg-primary border-2 border-white rounded-[2px] z-10 transition-all duration-150 hover:scale-[1.3] hover:bg-primary shadow-sm shadow-primary/30',
     grid: 'absolute inset-0 pointer-events-none',
-    gridLine: 'absolute bg-inverted/20'
-  }
+    gridLine: 'absolute bg-inverted/20',
+  },
+  variants: {
+    loaded: {
+      true: {
+        bgImage: 'opacity-100',
+      },
+      false: {
+        bgImage: 'opacity-0',
+      },
+    },
+    moving: {
+      true: {
+        stencil: 'cursor-move',
+      },
+    },
+    panning: {
+      true: {
+        stencil: 'cursor-grab active:cursor-grabbing',
+      },
+    },
+    circle: {
+      true: {
+        stencil: 'rounded-full',
+        stencilWrapper: 'rounded-full',
+      },
+    },
+    interacting: {
+      true: {
+        stencil: 'border-primary shadow-[0_0_0_9999px_rgba(0,0,0,0.5)]',
+      },
+    },
+    dashed: {
+      true: {
+        stencil: 'border-dashed',
+      },
+    },
+    position: {
+      tl: { handle: 'top-0 left-0 -translate-x-1/2 -translate-y-1/2 cursor-nw-resize' },
+      tr: { handle: 'top-0 right-0 translate-x-1/2 -translate-y-1/2 cursor-ne-resize' },
+      bl: { handle: 'bottom-0 left-0 -translate-x-1/2 translate-y-1/2 cursor-sw-resize' },
+      br: { handle: 'bottom-0 right-0 translate-x-1/2 translate-y-1/2 cursor-se-resize' },
+      t: { handle: 'top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 cursor-n-resize' },
+      b: { handle: 'bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 cursor-s-resize' },
+      l: { handle: 'left-0 top-1/2 -translate-x-1/2 -translate-y-1/2 cursor-w-resize' },
+      r: { handle: 'right-0 top-1/2 translate-x-1/2 -translate-y-1/2 cursor-e-resize' },
+    },
+  },
 } as const

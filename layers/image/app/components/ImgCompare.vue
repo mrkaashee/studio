@@ -7,7 +7,7 @@ import type { ComponentConfig } from '../types/tv'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioCompare = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioCompare = ComponentConfig<typeof theme, AppConfig, 'compare'>
 
 export interface StudioCompareProps {
   before: string
@@ -21,9 +21,9 @@ export interface StudioCompareProps {
 <script setup lang="ts">
 const appConfig = useAppConfig() as StudioAppConfig
 
-const props = defineProps<StudioCompareProps>()
+defineProps<StudioCompareProps>()
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.compare || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.compare || {}) })())
 
 const sliderPosition = ref(50)
 const containerRef = ref<HTMLElement | null>(null)

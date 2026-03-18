@@ -7,7 +7,7 @@ import type { ImageEditorContext } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioToolbar = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioToolbar = ComponentConfig<typeof theme, AppConfig, 'toolbar'>
 
 export interface StudioToolbarProps {
   ui?: StudioToolbar['slots']
@@ -25,7 +25,7 @@ if (!imgStudio) {
   throw new Error('ImgStudioToolbar must be used within an ImgStudio component')
 }
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.toolbar || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.toolbar || {}) })())
 
 // Map context values for easier template access
 const canUndo = computed(() => imgStudio.canUndo?.value ?? false)

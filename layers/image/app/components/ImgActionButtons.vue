@@ -7,7 +7,7 @@ import type { ImageEditorContext, ImgActionButtonsProps } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioActionButtons = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioActionButtons = ComponentConfig<typeof theme, AppConfig, 'actionButtons'>
 
 export interface StudioActionButtonsProps extends ImgActionButtonsProps {
   ui?: StudioActionButtons['slots']
@@ -21,7 +21,7 @@ const props = defineProps<StudioActionButtonsProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.actionButtons || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.actionButtons || {}) })({ }))
 
 const activeTool = computed(() => imgStudio?.activeTool.value)
 

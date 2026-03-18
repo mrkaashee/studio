@@ -61,6 +61,24 @@ export default {
         root: 'border border-default rounded-xl',
       },
     },
+    interacting: {
+      true: {
+        viewport: 'is-interacting',
+      },
+    },
+    panning: {
+      true: {
+        viewport: 'cursor-grab active:cursor-grabbing',
+      },
+    },
+    visible: {
+      true: {
+        canvasWrapper: 'opacity-100',
+      },
+      false: {
+        canvasWrapper: 'opacity-0',
+      },
+    },
   },
   defaultVariants: {
     toolbarPosition: 'right',

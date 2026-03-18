@@ -15,6 +15,28 @@ export default {
     overlay: 'u-img-censor-overlay absolute inset-0 w-full h-full pointer-events-auto cursor-crosshair overflow-visible',
     box: 'u-img-censor-box absolute pointer-events-auto cursor-move group',
     deleteButton: 'absolute pointer-events-auto bg-black text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors z-50 shadow-lg',
-    selectionHighlight: 'absolute inset-0 group-[.is-interacting]:bg-primary/30 border-transparent transition-all duration-200 group-[.is-interacting]:border-primary'
-  }
+    selectionHighlight: 'absolute inset-0 group-[.is-interacting]:bg-primary/30 border-transparent transition-all duration-200 group-[.is-interacting]:border-primary',
+  },
+  variants: {
+    interacting: {
+      true: {
+        box: 'is-interacting',
+      },
+    },
+    active: {
+      true: {
+        box: 'is-active',
+      },
+    },
+    blur: {
+      true: {
+        box: 'is-blur',
+      },
+    },
+    pixelate: {
+      true: {
+        box: 'is-pixelate',
+      },
+    },
+  },
 } as const

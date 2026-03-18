@@ -7,7 +7,7 @@ import type { ImageEditorContext } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioPreview = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioPreview = ComponentConfig<typeof theme, AppConfig, 'preview'>
 
 export interface StudioPreviewProps {
   headless?: boolean
@@ -24,7 +24,7 @@ const props = defineProps<StudioPreviewProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.preview || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.preview || {}) })())
 
 const isComparing = ref(false)
 

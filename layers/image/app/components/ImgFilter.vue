@@ -7,7 +7,7 @@ import type { ImageEditorContext, FilterOptions } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioFilter = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioFilter = ComponentConfig<typeof theme, AppConfig, 'filter'>
 
 export interface StudioFilterProps {
   headless?: boolean
@@ -32,7 +32,7 @@ const props = defineProps<StudioFilterProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.filter || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.filter || {}) })())
 
 const currentFilters = ref<FilterOptions>({
   brightness: 100,

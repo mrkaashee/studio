@@ -27,7 +27,6 @@ const handlerCfg = computed(() => imgStudio?.handlerCfg?.value ?? null)
 const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.handler || {}) })({
   position: props.position,
   size: (handlerCfg.value?.size) || 'md',
-  ...props.ui,
 }))
 
 const cursorMap = {

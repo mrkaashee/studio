@@ -1,9 +1,30 @@
-<!-- eslint-disable vue/multi-word-component-names -->
-<script lang="ts" setup>
-import { useResizeObserver, useEventListener } from '@vueuse/core'
-import type { CropperProps, CropperEmits } from '../types/cropper'
+<script lang="ts">
+import { computed, watch, ref } from 'vue'
+import { useResizeObserver } from '@vueuse/core'
+import type { AppConfig } from '@nuxt/schema'
+import theme from '../utils/themes/cropper'
+import type { ComponentConfig } from '../types/tv'
+import type { CropperProps, CropperEmits, UseCropperOptions } from '../types/cropper'
+import { useCropper } from '../composables/useCropper'
+import { useCropperZoom } from '../composables/useCropperZoom'
+import { useCropperStyles } from '../composables/useCropperStyles'
+import { useCropperInteraction } from '../composables/useCropperInteraction'
+import { tv } from '../utils/tv'
+import type { StudioAppConfig } from '../types/studio'
 
-const props = withDefaults(defineProps<CropperProps>(), {
+export type StudioCropper = ComponentConfig<typeof theme, AppConfig, 'cropper'>
+
+export interface StudioCropperProps extends CropperProps {
+  ui?: StudioCropper['slots']
+}
+
+export type { CropperEmits }
+</script>
+
+<script lang="ts" setup>
+const appConfig = useAppConfig() as StudioAppConfig
+
+const props = withDefaults(defineProps<StudioCropperProps>(), {
   src: null,
   mode: 'move-box',
   shape: 'rectangle',
@@ -20,6 +41,16 @@ const props = withDefaults(defineProps<CropperProps>(), {
 })
 
 const emit = defineEmits<CropperEmits>()
+
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.cropper || {}) })({
+  loaded: imageLoaded.value,
+  moving: props.mode === 'move-box' && props.shape === 'rectangle',
+  panning: props.mode === 'move-image',
+  circle: props.shape === 'circle',
+  interacting: isInteracting.value,
+  dashed: props.borderStyle === 'dashed',
+  ...props.ui
+}))
 
 const cropperOptions = computed<UseCropperOptions>(() => ({
   mode: props.mode,
@@ -107,14 +138,10 @@ const notifyChange = () => {
 
 // Watch for aspect ratio changes from parent
 watch(() => props.aspectRatio, () => {
-  // Update the internal effective aspect ratio in useCropper
-  // Even though it's a computed in useCropper, it depends on the reactive options ref.
-  // We need to re-initialize the crop to apply the new ratio visually.
   if (imageLoaded.value) {
     isInteracting.value = true
     initializeCrop()
     notifyChange()
-    // Reset after a short delay to ensure transitions are suppressed for the jump
     setTimeout(() => {
       isInteracting.value = false
     }, 50)
@@ -142,201 +169,37 @@ const { startInteraction, circleCursor, updateCircleCursor } = useCropperInterac
   notifyChange
 )
 
-// ─── Zoom event handlers ──────────────────────────────────────────────────────
 const handleWheel = (e: WheelEvent) => {
-  if (!props.enableZoom || !zoom || !containerRef.value) return
-  const rect = containerRef.value.getBoundingClientRect()
-  const cursorPos = {
-    x: e.clientX - rect.left,
-    y: e.clientY - rect.top,
-  }
-  zoom.handleWheel(e, cursorPos)
+  if (!props.enableZoom || !zoom) return
+  zoom.handleWheel(e)
 }
 
-// Pinch zoom state
-let pinchStartDistance = 0
-
-const handleTouchStart = (e: TouchEvent) => {
-  if (!props.enableZoom || !zoom || e.touches.length !== 2) return
-  const touch1 = e.touches[0]
-  const touch2 = e.touches[1]
-  if (!touch1 || !touch2) return
-  pinchStartDistance = Math.hypot(
-    touch2.clientX - touch1.clientX,
-    touch2.clientY - touch1.clientY
-  )
-}
-
-const handleTouchMove = (e: TouchEvent) => {
-  if (!props.enableZoom || !zoom || e.touches.length !== 2) return
-  e.preventDefault()
-
-  const touch1 = e.touches[0]
-  const touch2 = e.touches[1]
-  if (!touch1 || !touch2) return
-
-  const currentDistance = Math.hypot(
-    touch2.clientX - touch1.clientX,
-    touch2.clientY - touch1.clientY
-  )
-
-  if (pinchStartDistance > 0) {
-    const scale = currentDistance / pinchStartDistance
-
-    const centerX = (touch1.clientX + touch2.clientX) / 2
-    const centerY = (touch1.clientY + touch2.clientY) / 2
-
-    if (containerRef.value) {
-      const rect = containerRef.value.getBoundingClientRect()
-      zoom.handlePinch(scale, {
-        x: centerX - rect.left,
-        y: centerY - rect.top,
-      })
-    }
-  }
-}
-
-// ─── Image load ───────────────────────────────────────────────────────────────
 const handleLoad = () => {
-  if (!bgImageRef.value) return
-  imgNatural.value = { width: bgImageRef.value.naturalWidth, height: bgImageRef.value.naturalHeight }
   imageLoaded.value = true
   imageError.value = false
   initializeCrop()
-  emit('ready')
   notifyChange()
 }
 
 const handleError = () => {
+  imageLoaded.value = false
   imageError.value = true
-  imageLoaded.value = false
-  emit('error', new Error('Failed to load image'))
 }
 
-watch(() => props.src, () => {
-  imageLoaded.value = false
-  imageError.value = false
+useResizeObserver(containerRef, entries => {
+  const entry = entries[0]
+  if (!entry) return
+
+  const { width, height } = entry.contentRect
+  containerSize.value.width = width
+  containerSize.value.height = height
+  if (imageLoaded.value) {
+    initializeCrop()
+  }
 })
 
-// ─── Canvas export ────────────────────────────────────────────────────────────
-const getCanvas = (opts: { width?: number, height?: number } = {}) => {
-  if (!bgImageRef.value || !imageLoaded.value) return null
-  const coords = getCurrentCoordinates()
-  return cropToCanvas(
-    bgImageRef.value,
-    coords.x,
-    coords.y,
-    coords.width,
-    coords.height,
-    { ...opts, isCircle: props.shape === 'circle', transforms: getTransformState() }
-  )
-}
-
-const getBlob = async (opts: { width?: number, height?: number, format?: 'image/png' | 'image/jpeg' | 'image/webp', quality?: number } = {}) => {
-  const canvas = getCanvas(opts)
-  if (!canvas) return null
-  return canvasToBlob(canvas, opts.format, opts.quality)
-}
-
-const getDataURL = (opts: { width?: number, height?: number, format?: 'image/png' | 'image/jpeg' | 'image/webp', quality?: number } = {}) => {
-  const canvas = getCanvas(opts)
-  if (!canvas) return null
-  return canvasToDataURL(canvas, opts.format, opts.quality)
-}
-
-const getResult = () => ({
-  coordinates: getCurrentCoordinates(),
-  image: { ...imgNatural.value },
-  canvas: getCanvas(),
-})
-
-// ─── Keyboard shortcuts ───────────────────────────────────────────────────────
-const handleKeydown = (e: KeyboardEvent) => {
-  if (!imageLoaded.value || props.mode === 'fixed') return
-
-  const step = e.shiftKey ? 10 : 1
-  let handled = false
-
-  if (props.mode === 'move-box') {
-    const iw = imgNatural.value.width
-    const ih = imgNatural.value.height
-
-    switch (e.key) {
-      case 'ArrowLeft':
-        crop.value.x = Math.max(0, crop.value.x - step)
-        handled = true
-        break
-      case 'ArrowRight':
-        crop.value.x = Math.min(iw - crop.value.width, crop.value.x + step)
-        handled = true
-        break
-      case 'ArrowUp':
-        crop.value.y = Math.max(0, crop.value.y - step)
-        handled = true
-        break
-      case 'ArrowDown':
-        crop.value.y = Math.min(ih - crop.value.height, crop.value.y + step)
-        handled = true
-        break
-    }
-  }
-  else if (props.mode === 'move-image') {
-    const iw = imgNatural.value.width
-    const ih = imgNatural.value.height
-
-    switch (e.key) {
-      case 'ArrowLeft':
-        imagePan.value.x = Math.max(0, imagePan.value.x - step)
-        handled = true
-        break
-      case 'ArrowRight':
-        imagePan.value.x = Math.min(iw - moveImageCropSize.value.width, imagePan.value.x + step)
-        handled = true
-        break
-      case 'ArrowUp':
-        imagePan.value.y = Math.max(0, imagePan.value.y - step)
-        handled = true
-        break
-      case 'ArrowDown':
-        imagePan.value.y = Math.min(ih - moveImageCropSize.value.height, imagePan.value.y + step)
-        handled = true
-        break
-    }
-  }
-
-  if (handled) {
-    e.preventDefault()
-    notifyChange()
-  }
-}
-
-// ─── Container resize ─────────────────────────────────────────────────────────
-const updateSize = () => {
-  if (containerRef.value) {
-    containerSize.value = { width: containerRef.value.clientWidth, height: containerRef.value.clientHeight }
-  }
-}
-
-useResizeObserver(containerRef, updateSize)
-useEventListener(containerRef, 'keydown', handleKeydown)
-
-onMounted(() => { updateSize() })
-
+// Public API
 defineExpose({
-  getCanvas,
-  getBlob,
-  getDataURL,
-  getResult,
-  // Zoom methods
-  zoomIn: () => zoom?.zoomIn(),
-  zoomOut: () => zoom?.zoomOut(),
-  zoomTo: (level: number) => zoom?.zoomTo(level),
-  fitToContainer: () => zoom?.fitToContainer(),
-  fillContainer: () => zoom?.fillContainer(),
-  actualSize: () => zoom?.actualSize(),
-  resetZoom: () => zoom?.resetZoom(),
-  getZoomLevel: () => zoom?.zoomLevel.value ?? 1,
-  // Transform methods
   rotateRight,
   rotateLeft,
   rotateTo,
@@ -344,56 +207,48 @@ defineExpose({
   flipVertical,
   resetTransforms,
   getTransformState,
+  getResult: getCurrentCoordinates,
+  refresh: () => {
+    initializeCrop()
+    notifyChange()
+  }
 })
 </script>
 
 <template>
   <div
     ref="containerRef"
-    class="relative w-full h-full min-h-50 overflow-hidden bg-elevated select-none touch-action-none outline-none focus-visible:outline-2 focus-visible:outline-primary/50 focus-visible:-outline-offset-2"
-    tabindex="0"
-    @wheel="handleWheel"
-    @touchstart="handleTouchStart"
-    @touchmove="handleTouchMove">
-    <div v-if="!src" class="flex items-center justify-center h-full text-muted text-sm">
-      No image provided
+    :class="resUI.root()"
+    @wheel.prevent="handleWheel">
+    <div v-if="!src" :class="resUI.empty()">
+      No image source provided.
     </div>
-
-    <div v-else-if="imageError" class="flex items-center justify-center h-full text-error text-sm">
-      Failed to load image
+    <div v-else-if="imageError" :class="resUI.error()">
+      Failed to load image.
     </div>
 
     <template v-else>
-      <div v-if="!imageLoaded" class="absolute inset-0 flex items-center justify-center">
-        <div class="w-10 h-10 border-[3px] border-inverted/10 border-t-inverted/60 rounded-full animate-spin" />
+      <div v-if="!imageLoaded" :class="resUI.loader()">
+        <slot name="loader">
+          <div :class="resUI.spinner()" />
+        </slot>
       </div>
 
-      <!-- Zoom Controls -->
-      <div
-        v-if="imageLoaded && enableZoom && showZoomControls && zoom"
-        class="absolute bottom-4 right-4 flex items-center gap-1 bg-inverted/75 backdrop-blur-md rounded-lg p-1.5 z-30 shadow-lg text-inverted">
-        <UButton
-          icon="i-lucide-plus"
-          size="xs"
-          color="neutral"
-          variant="ghost"
-          :disabled="!zoom.canZoomIn.value"
-          title="Zoom In (Scroll Up)"
-          @click="zoom.zoomIn()" />
-
-        <div class="min-w-12 text-center text-inverted text-[11px] font-bold px-2 select-none" title="Current Zoom Level">
-          {{ zoom.zoomPercentage.value }}%
-        </div>
-
+      <div v-if="imageLoaded && showZoomControls && zoom" :class="resUI.zoomContainer()">
         <UButton
           icon="i-lucide-minus"
           size="xs"
           color="neutral"
           variant="ghost"
-          :disabled="!zoom.canZoomOut.value"
-          title="Zoom Out (Scroll Down)"
           @click="zoom.zoomOut()" />
-
+        <span :class="resUI.zoomPercentage()">{{ Math.round(zoomLevel * 100) }}%</span>
+        <UButton
+          icon="i-lucide-plus"
+          size="xs"
+          color="neutral"
+          variant="ghost"
+          @click="zoom.zoomIn()" />
+        <div class="w-px h-3 bg-inverted/20 mx-1" />
         <UButton
           icon="i-lucide-maximize"
           size="xs"
@@ -412,12 +267,11 @@ defineExpose({
           @click="zoom.actualSize()" />
       </div>
 
-      <div class="absolute inset-0">
+      <div :class="resUI.viewport()">
         <img
           ref="bgImageRef"
           :src="src"
-          class="absolute block pointer-events-none max-w-none opacity-0 transition-opacity duration-200 blur-xs"
-          :class="{ 'opacity-35': imageLoaded }"
+          :class="resUI.bgImage()"
           :style="imageStyle"
           draggable="false"
           @load="handleLoad"
@@ -426,14 +280,7 @@ defineExpose({
 
       <div
         v-if="imageLoaded"
-        class="absolute box-border border-2 border-inverted/85 shadow-[0_0_0_9999px_--theme(--color-inverted/0.45)] transition-shadow duration-150"
-        :class="{
-          'cursor-move': mode === 'move-box' && shape === 'rectangle',
-          'cursor-grab active:cursor-grabbing': mode === 'move-image',
-          'rounded-full': shape === 'circle',
-          'shadow-[0_0_0_9999px_--theme(--color-inverted/0.6)]': isInteracting,
-          'border-dashed border-[3px]': borderStyle === 'dashed',
-        }"
+        :class="resUI.stencil()"
         :style="[stencilStyle, shape === 'circle' && mode === 'move-box' ? { cursor: 'move' } : {}]"
         @mousedown="mode === 'move-box' && shape === 'rectangle' ? startInteraction($event, 'move-box')
           : mode === 'move-image' ? startInteraction($event, 'pan')
@@ -442,16 +289,15 @@ defineExpose({
           : mode === 'move-image' ? startInteraction($event, 'pan')
             : undefined">
         <div
-          class="absolute inset-0 overflow-hidden"
-          :class="{ 'rounded-full': shape === 'circle' }"
+          :class="resUI.stencilWrapper()"
           @mousedown="shape === 'circle' && mode === 'move-box' ? startInteraction($event, 'move-box') : undefined"
           @touchstart="shape === 'circle' && mode === 'move-box' ? startInteraction($event, 'move-box') : undefined">
-          <img :src="src" class="absolute block pointer-events-none max-w-none" :style="stencilImageStyle" draggable="false">
+          <img :src="src" :class="resUI.stencilImage()" :style="stencilImageStyle" draggable="false">
         </div>
 
         <div
           v-if="shape === 'circle' && mode === 'move-box'"
-          class="absolute -inset-3 rounded-full border-16 border-transparent z-20 pointer-events-auto transition-colors duration-200 hover:border-primary/15"
+          :class="resUI.circleHandle()"
           :style="{ cursor: circleCursor }"
           @mousedown.stop="startInteraction($event, 'resize-circle')"
           @touchstart.stop="startInteraction($event, 'resize-circle')"
@@ -461,26 +307,16 @@ defineExpose({
           <div
             v-for="h in ['tl', 'tr', 'bl', 'br', 't', 'b', 'l', 'r']"
             :key="h"
-            class="absolute w-2.75 h-2.75 bg-inverted border-2 border-primary rounded-[2px] z-10 transition-all duration-150 hover:scale-[1.3] hover:bg-primary"
-            :class="{
-              '-top-1.5 -left-1.5 cursor-nw-resize': h === 'tl',
-              '-top-1.5 -right-1.5 cursor-ne-resize': h === 'tr',
-              '-bottom-1.5 -left-1.5 cursor-sw-resize': h === 'bl',
-              '-bottom-1.5 -right-1.5 cursor-se-resize': h === 'br',
-              '-top-1.5 left-1/2 -translate-x-1/2 cursor-n-resize hover:scale-x-[1.3] hover:scale-y-[1.3]': h === 't',
-              '-bottom-1.5 left-1/2 -translate-x-1/2 cursor-s-resize hover:scale-x-[1.3] hover:scale-y-[1.3]': h === 'b',
-              '-left-1.5 top-1/2 -translate-y-1/2 cursor-w-resize hover:scale-x-[1.3] hover:scale-y-[1.3]': h === 'l',
-              '-right-1.5 top-1/2 -translate-y-1/2 cursor-e-resize hover:scale-x-[1.3] hover:scale-y-[1.3]': h === 'r',
-            }"
+            :class="resUI.handle({ position: h as any })"
             @mousedown.stop="startInteraction($event, 'resize', h)"
             @touchstart.stop="startInteraction($event, 'resize', h)" />
         </template>
 
-        <div v-if="shape !== 'circle'" class="absolute inset-0 pointer-events-none">
-          <div class="absolute top-0 bottom-0 w-px bg-inverted/20" style="left:33.33%" />
-          <div class="absolute top-0 bottom-0 w-px bg-inverted/20" style="left:66.66%" />
-          <div class="absolute left-0 right-0 h-px bg-inverted/20" style="top:33.33%" />
-          <div class="absolute left-0 right-0 h-px bg-inverted/20" style="top:66.66%" />
+        <div v-if="shape !== 'circle'" :class="resUI.grid()">
+          <div :class="resUI.gridLine()" style="left:33.33%; top:0; bottom:0; width:1px;" />
+          <div :class="resUI.gridLine()" style="left:66.66%; top:0; bottom:0; width:1px;" />
+          <div :class="resUI.gridLine()" style="top:33.33%; left:0; right:0; height:1px;" />
+          <div :class="resUI.gridLine()" style="top:66.66%; left:0; right:0; height:1px;" />
         </div>
       </div>
     </template>

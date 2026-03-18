@@ -10,7 +10,7 @@ import type { StudioAppConfig } from '../types/studio'
 import { tv } from '../utils/tv'
 import ImgHandler from './ImgHandler.vue'
 
-export type StudioAnnotate = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioAnnotate = ComponentConfig<typeof theme, AppConfig, 'annotate'>
 
 export interface StudioAnnotateProps {
   headless?: boolean
@@ -26,7 +26,7 @@ const props = defineProps<StudioAnnotateProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.annotate || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.annotate || {}) })({ }))
 
 const {
   activeTool: activeAnnotationTool,

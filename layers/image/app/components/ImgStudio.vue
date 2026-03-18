@@ -311,14 +311,12 @@ const viewportRef = ref<HTMLDivElement | null>(null)
 const fixedOverlayRef = ref<HTMLDivElement | null>(null)
 const toolbarTargetRef = ref<HTMLDivElement | null>(null)
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.studio || {}) }) ({
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.studio || {}) })({
   toolbarPosition: toolbarPosition.value,
   fixedStencil: fixedStencil.value,
   hasBoard: hasBoard.value,
   hasBorder: hasBorder.value,
-  ...props.ui,
-})
-)
+}))
 
 // Reactive viewport dimensions
 const { width: vWidth, height: vHeight } = useElementSize(viewportRef)

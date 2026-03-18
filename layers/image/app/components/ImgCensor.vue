@@ -1,14 +1,32 @@
-<script setup lang="ts">
+<script lang="ts">
 import { computed, inject, watch, onUnmounted, onMounted } from 'vue'
+import type { AppConfig } from '@nuxt/schema'
+import theme from '../utils/themes/img-censor'
+import type { ComponentConfig } from '../types/tv'
 import { useCensor } from '../composables/useCensor'
 import type { ImageEditorContext } from '../types/editor'
-import type { StudioCensorProps } from './ImgStudio.vue'
 import { getEventPoint } from '../utils/interaction'
-import ImgHandler from './ImgHandler.vue'
+import { tv } from '../utils/tv'
+import type { StudioAppConfig } from '../types/studio'
 
+export type StudioCensor = ComponentConfig<typeof theme, AppConfig, 'censor'>
+
+export interface StudioCensorProps {
+  headless?: boolean
+  mode?: 'blur' | 'pixelate'
+  intensity?: number
+  state?: ReturnType<typeof useCensor>
+  ui?: StudioCensor['slots']
+}
+</script>
+
+<script setup lang="ts">
+const appConfig = useAppConfig() as StudioAppConfig
 const props = defineProps<StudioCensorProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
+
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.censor || {}) })({}))
 
 // If no state provided, use local (backwards compatibility)
 const localState = props.state ? undefined : useCensor(computed(() => imgStudio?.zoomLevel.value || 1))
@@ -115,11 +133,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="u-img-censor">
+  <div :class="resUI.root()">
     <!-- Sidebar Controls (only if not headless) -->
-    <div v-if="!props.headless" class="space-y-4">
-      <div class="flex items-center justify-between">
-        <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">
+    <div v-if="!props.headless" :class="resUI.sidebar()">
+      <div :class="resUI.header()">
+        <h3 :class="resUI.title()">
           Censor Tool
         </h3>
         <UBadge v-if="isActive" color="primary" size="xs">
@@ -137,38 +155,40 @@ defineExpose({
           @click="imgStudio?.activateTool('censor')" />
       </div>
 
-      <div v-else class="space-y-4 pt-2">
-        <div class="grid grid-cols-2 gap-2">
+      <div v-else :class="resUI.controls() + ' pt-2'">
+        <div :class="resUI.modeGrid()">
           <UButton
             label="Blur"
             :color="censorMode === 'blur' ? 'primary' : 'neutral'"
             :variant="censorMode === 'blur' ? 'solid' : 'soft'"
             size="xs"
+            :class="resUI.modeButton()"
             @click="censorMode = 'blur'" />
           <UButton
             label="Pixelate"
             :color="censorMode === 'pixelate' ? 'primary' : 'neutral'"
             :variant="censorMode === 'pixelate' ? 'solid' : 'soft'"
             size="xs"
+            :class="resUI.modeButton()"
             @click="censorMode = 'pixelate'" />
         </div>
 
-        <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] text-muted uppercase font-medium">Use Selection</span>
+        <div :class="resUI.controls()">
+          <div :class="resUI.propRow()">
+            <span :class="resUI.propTitle()">Use Selection</span>
             <USwitch v-model="useArea" size="xs" />
           </div>
 
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-[10px] text-muted uppercase font-medium">
-              <span>Intensity</span>
-              <span>{{ censorIntensity }}</span>
+          <div :class="resUI.propStack()">
+            <div :class="resUI.propRow()">
+              <span :class="resUI.propTitle()">Intensity</span>
+              <span :class="resUI.propValue()">{{ censorIntensity }}</span>
             </div>
             <USlider v-model="censorIntensity" :min="1" :max="50" size="sm" />
           </div>
         </div>
 
-        <div class="flex gap-2">
+        <div :class="resUI.actionButtons()">
           <UButton
             label="Cancel"
             color="neutral"
@@ -187,7 +207,7 @@ defineExpose({
     <!-- The Interaction Overlay / Drawing Surface -->
     <Teleport v-if="isActive && imgStudio?.overlayRef.value" :to="imgStudio.overlayRef.value">
       <div
-        class="u-img-censor-overlay absolute inset-0 w-full h-full pointer-events-auto cursor-crosshair overflow-visible"
+        :class="resUI.overlay()"
         @mousedown.stop.prevent="handleMouseDown"
         @touchstart.stop.prevent="handleMouseDown">
         <!-- Multiple Selection Boxes -->
@@ -196,13 +216,12 @@ defineExpose({
             v-for="sel in selections"
             :key="sel.id"
             :ref="el => setBoxRef(sel.id, el as HTMLElement | null)"
-            class="u-img-censor-box absolute pointer-events-auto cursor-move group"
-            :class="[
-              { 'is-interacting': activeSelectionId === sel.id && isInteracting },
-              { 'is-active': activeSelectionId === sel.id },
-              { 'is-blur': sel.mode === 'blur' },
-              { 'is-pixelate': sel.mode === 'pixelate' },
-            ]"
+            :class="resUI.box({
+              interacting: activeSelectionId === sel.id && isInteracting,
+              active: activeSelectionId === sel.id,
+              blur: sel.mode === 'blur',
+              pixelate: sel.mode === 'pixelate',
+            })"
             :style="{
               'transform': `translate3d(${sel.x}px, ${sel.y}px, 0)`,
               'width': sel.width + 'px',
@@ -219,7 +238,7 @@ defineExpose({
             <!-- Delete button for active selection -->
             <div
               v-if="activeSelectionId === sel.id && !isInteracting"
-              class="absolute pointer-events-auto bg-black text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors z-50 shadow-lg"
+              :class="resUI.deleteButton()"
               :style="{
                 width: `${24 * counterScale}px`,
                 height: `${24 * counterScale}px`,
@@ -234,11 +253,7 @@ defineExpose({
 
             <!-- Selection Area Highlight -->
             <div
-              class="absolute inset-0 group-[.is-interacting]:bg-primary/30"
-              :class="[
-                (activeSelectionId === sel.id && isInteracting) ? 'border-primary' : 'border-transparent',
-                { 'transition-all duration-200': !isInteracting },
-              ]"
+              :class="resUI.selectionHighlight()"
               :style="{ borderWidth: (2 * counterScale) + 'px' }" />
 
             <!-- High-Visibility Handles (Only for active selection) -->

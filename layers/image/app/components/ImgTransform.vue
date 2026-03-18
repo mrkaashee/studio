@@ -7,7 +7,7 @@ import type { ImageEditorContext, TransformState } from '../types/editor'
 import { tv } from '../utils/tv'
 import type { StudioAppConfig } from '../types/studio'
 
-export type StudioTransform = ComponentConfig<typeof theme, AppConfig, 'studio'>
+export type StudioTransform = ComponentConfig<typeof theme, AppConfig, 'transform'>
 
 export interface StudioTransformProps {
   headless?: boolean
@@ -22,7 +22,7 @@ const props = defineProps<StudioTransformProps>()
 
 const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.transform || {}) })(props.ui))
+const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.transform || {}) })())
 
 const currentTransform = ref<TransformState>({
   rotation: 0,
