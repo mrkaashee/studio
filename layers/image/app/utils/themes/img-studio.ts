@@ -23,19 +23,19 @@ export default {
     toolbarPosition: {
       right: {
         toolbar: 'flex-row max-lg:flex-col',
-        aside: 'w-80 border-l border-muted max-lg:w-full max-lg:h-87.5 max-lg:border-l-0 max-lg:border-t',
+        aside: 'w-80 border-l border-muted max-lg:w-full max-lg:h-72 max-lg:border-l-0 max-lg:border-t',
       },
       left: {
         toolbar: 'flex-row-reverse max-lg:flex-col',
-        aside: 'w-80 border-r border-muted max-lg:w-full max-lg:h-87.5 max-lg:border-r-0 max-lg:border-b',
+        aside: 'w-80 border-r border-muted max-lg:w-full max-lg:h-72 max-lg:border-r-0 max-lg:border-b',
       },
       top: {
         toolbar: 'flex-col',
-        aside: 'w-full border-b border-muted h-64',
+        aside: 'w-full border-b border-muted h-64 max-lg:h-48',
       },
       bottom: {
         toolbar: 'flex-col-reverse',
-        aside: 'w-full border-t border-muted h-64',
+        aside: 'w-full border-t border-muted h-64 max-lg:h-48',
       },
     },
     fixedStencil: {

@@ -321,6 +321,12 @@ const resUI = computed(() => tv({ extend: tv(theme), ...(appConfig.ui?.studio ||
 // Reactive viewport dimensions
 const { width: vWidth, height: vHeight } = useElementSize(viewportRef)
 
+watch([vWidth, vHeight], () => {
+  if (hasImage.value) {
+    fitToScreen()
+  }
+})
+
 // Zoom and Pan state
 const zoomLevel = ref(1)
 const minZoom = computed(() => {

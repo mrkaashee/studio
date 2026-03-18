@@ -3,7 +3,7 @@ export default {
     root: 'space-y-4 select-none',
     header: 'flex items-center justify-between',
     title: 'text-[10px] font-bold uppercase tracking-widest text-muted',
-    toolGrid: 'grid grid-cols-4 gap-2',
+    toolGrid: 'grid grid-cols-2 lg:grid-cols-2 max-lg:grid-cols-4 gap-2',
     toolButton: '',
     properties: 'bg-muted p-2 rounded-lg space-y-3',
     propHeader: 'flex items-center justify-between',
