@@ -42,7 +42,11 @@ const downloadImage = () => {
 <template>
   <div class="h-[calc(100vh-var(--header-top-height,64px))] w-full flex flex-col bg-background relative">
     <ClientOnly>
-      <ImgStudio ref="editorRef" borderless>
+      <ImgStudio
+        ref="editorRef"
+        borderless
+        mode="image"
+      >
         
         <template #header>
           <div class="flex items-center justify-between px-4 py-3 border-b border-default bg-elevated z-10">

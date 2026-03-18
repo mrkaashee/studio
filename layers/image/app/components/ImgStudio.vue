@@ -39,6 +39,7 @@ const props = defineProps<{
   handler?: boolean | StudioHandlerProps
   // ─── v-model ─────────────────────────────────────────────────────
   activeTool?: string | null
+  mode?: 'canvas' | 'image'
 }>()
 
 const emit = defineEmits<{
@@ -71,13 +72,15 @@ const historyCfg = computed(() => resolve<StudioHistoryProps>(props.history))
 const fixedStencil = computed(() => stencilCfg.value?.fixed ?? false)
 const disablePanning = computed(() => dragCfg.value?.disable ?? false)
 const restrictToBounds = computed(() => dragCfg.value?.restrict ?? false)
-// canvas.border defaults to true (has border unless explicitly set to false)
+// canvas.border defaults to true, but false in image mode
 const hasBorder = computed(() => {
+  if (resolvedMode.value === 'image' && canvasCfg.value?.border === undefined) return false
   const b = canvasCfg.value?.border
   return b !== false
 })
-// canvas.board (checkerboard) defaults to true
+// canvas.board (checkerboard) defaults to true, but false in image mode
 const hasBoard = computed(() => {
+  if (resolvedMode.value === 'image') return false
   const b = canvasCfg.value?.board
   return b !== false
 })
@@ -94,6 +97,11 @@ const uploaderOnly = computed((): boolean => {
   return uploaderCfg.value.hideIfHasImage === true
 })
 const handlerCfg = computed(() => resolve<StudioHandlerProps>(props.handler))
+// mode: priority to top-level prop, fallback to canvas config, default to 'canvas'
+const resolvedMode = computed((): 'canvas' | 'image' => {
+  if (props.mode) return props.mode
+  return canvasCfg.value?.mode ?? 'canvas'
+})
 // floatingBar
 const showFloatingBar = computed(() => floatingBarCfg.value !== null && floatingBarCfg.value?.hide !== true)
 const floatingBarPosition = computed(() => floatingBarCfg.value?.position ?? 'bottom')
@@ -139,6 +147,7 @@ const aspectRatio = ref<number | undefined>(undefined)
 
 const sourceFile = shallowRef<File | null>(null)
 const sourceObjectUrl = useObjectUrl(sourceFile)
+const currentImageUrl = computed(() => imageState.value.current || props.src || '')
 
 const viewportRef = ref<HTMLDivElement | null>(null)
 const fixedOverlayRef = ref<HTMLDivElement | null>(null)
@@ -901,6 +910,7 @@ const editorAPI = {
   processImage,
   handlerCfg,
   sourceFile,
+  mode: resolvedMode,
 }
 
 // Provide context to child tools
@@ -969,6 +979,7 @@ defineExpose({
   getCurrentCoordinates,
   handlerCfg,
   sourceFile,
+  mode: resolvedMode,
 })
 </script>
 
@@ -1091,7 +1102,15 @@ defineExpose({
           <canvas
             ref="canvasRef"
             class="block w-full h-full shadow-2xl bg-default"
+            :class="{ hidden: resolvedMode === 'image' }"
             :style="canvasPreviewStyle" />
+          <img
+            v-if="resolvedMode === 'image'"
+            ref="imageRef"
+            :src="currentImageUrl"
+            class="block w-full h-full shadow-2xl bg-default object-contain pointer-events-none"
+            :style="canvasPreviewStyle"
+            @load="canvasVisible = true">
           <!-- Overlay for tools (like crop handles - traditional mode) -->
           <div ref="overlayRef" class="absolute inset-0 w-full h-full pointer-events-none z-10">
             <slot :editor="editorAPI" name="overlay" />

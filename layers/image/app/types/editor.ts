@@ -1,3 +1,5 @@
+import type { Ref, ComputedRef } from 'vue'
+
 export type ImageFormat = 'image/jpeg' | 'image/png' | 'image/webp'
 
 export interface ImageState {
@@ -97,6 +99,7 @@ export interface ImageEditorContext {
   applyAndExport: (filename?: string) => Promise<void>
   panBounds: Ref<{ top: number, left: number, width: number, height: number } | null>
   toolbarTargetRef: Ref<HTMLDivElement | null>
+  mode: ComputedRef<'canvas' | 'image'>
   // Toolbar methods
   undo: () => Promise<void>
   redo: () => Promise<void>
@@ -174,6 +177,8 @@ export interface StudioCanvasProps {
   border?: boolean | Record<string, unknown>
   class?: string
   style?: string | Record<string, string>
+  /** Rendering mode: 'canvas' (pixel-level editing) or 'image' (high-fidelity preview) */
+  mode?: 'canvas' | 'image'
 }
 
 export interface StudioStencilProps {

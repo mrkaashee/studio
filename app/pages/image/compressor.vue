@@ -16,14 +16,14 @@ const {
 } = useImageCompress()
 
 // Feed the original uploaded file into the compressor
-watch(() => editorRef.value?.sourceFile, (file) => {
+watch(() => editorRef.value?.sourceFile, file => {
   if (file && editorRef.value?.imageRef) {
     setSource(editorRef.value.imageRef, file.size)
   }
 })
 
 // Update the ImgStudio canvas live without triggering history commits
-watch(compressedImageUrl, (url) => {
+watch(compressedImageUrl, url => {
   if (url && editorRef.value) {
     editorRef.value.updateCanvas(url, true)
   }
@@ -59,8 +59,11 @@ const formatSize = (bytes: number) => {
 <template>
   <div class="h-[calc(100vh-var(--header-top-height,64px))] w-full flex flex-col bg-background relative">
     <ClientOnly>
-      <ImgStudio ref="editorRef" borderless>
-        
+      <ImgStudio
+        ref="editorRef"
+        borderless
+        mode="image"
+      >
         <template #header>
           <div class="flex items-center justify-between px-4 py-3 border-b border-default bg-elevated z-10">
             <div class="flex items-center gap-3">
@@ -68,8 +71,12 @@ const formatSize = (bytes: number) => {
                 <UIcon name="i-lucide-shrink" class="size-5" />
               </div>
               <div>
-                <h1 class="font-bold tracking-tight text-sm">Image Compressor</h1>
-                <p class="text-[10px] text-muted">Optimize file size without losing quality.</p>
+                <h1 class="font-bold tracking-tight text-sm">
+                  Image Compressor
+                </h1>
+                <p class="text-[10px] text-muted hidden sm:block">
+                  Reduce image file size with intelligent optimization and high-fidelity results.
+                </p>
               </div>
             </div>
             
