@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { ref, computed, watch } from 'vue'
+
 const {
   originalWidth,
   originalHeight,

@@ -1,5 +1,5 @@
-﻿<script lang="ts" setup>
-import type { ChangeEvent } from '../../types/editor'
+<script lang="ts" setup>
+import type { ChangeEvent } from '../../../types/editor'
 
 const isOpen = ref(false)
 const selectedImage = ref<string | null>(null)
@@ -71,7 +71,7 @@ const handleSave = () => {
         <div class="flex justify-center">
           <UButton
             label="← Back to Examples"
-            to="/examples"
+            to="/image-studio/examples"
             variant="ghost"
             color="neutral" />
         </div>
@@ -103,25 +103,15 @@ const handleSave = () => {
             <div class="flex justify-center items-center bg-black">
               <!-- Exact 400×400 canvas — no header eating into this space -->
               <div class="w-100 h-100 overflow-hidden relative">
-                <ImgEditor
+                <ImgStudio
                   v-if="selectedImage"
                   :src="selectedImage"
                   fixed-stencil
                   restrict-to-bounds
                   borderless
                   :min-zoom="1"
-                  @change="onChange">
-                  <template #default="{ editor }">
-                    <div class="relative w-full h-full bg-black/95">
-                      <CircleStencil
-                        v-if="editor.hasImage.value"
-                        fixed
-                        :crop-percent="100"
-                        :output-width="400"
-                        :output-height="400" />
-                    </div>
-                  </template>
-                </ImgEditor>
+                  :cropper="{ shape: 'circle', cropPercent: 100, outputWidth: 400, outputHeight: 400 }"
+                  @change="onChange" />
               </div>
             </div>
           </template>

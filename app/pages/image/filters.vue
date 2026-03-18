@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, onMounted, nextTick } from 'vue'
+
 import type { FilterOptions } from '../../../layers/image/app/types/editor'
 
 interface FilterPreset {
@@ -54,19 +55,17 @@ onMounted(() => {
     <template #default="{ img }">
       <div class="absolute inset-0 h-full w-full">
         <ClientOnly>
-          <ImgEditor
+          <ImgStudio
             ref="editorRef"
             :src="img"
-            borderless
-            hide-checkerboard
-            disable-panning>
+            borderless>
             <template #header>
               <div class="hidden" />
             </template>
-            <template #overlay>
+            <template #default>
               <ImgFilter ref="filterRef" />
             </template>
-          </ImgEditor>
+          </ImgStudio>
         </ClientOnly>
       </div>
     </template>

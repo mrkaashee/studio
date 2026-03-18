@@ -1,5 +1,7 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { ref, computed, watch, onMounted, onUnmounted, inject } from 'vue'
 import { useResizeObserver, useEventListener } from '@vueuse/core'
+
 import type { ImageEditorContext } from '../types/editor'
 
 const props = withDefaults(defineProps<{
@@ -32,13 +34,13 @@ const emit = defineEmits<{
   (e: 'change', coords: { x: number, y: number, radius: number }): void
 }>()
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 // ─── MODE DETECTION ────────────────────────────────────────────────────────────
 // Fixed mode: always active when fixedStencil is on, OR when tool is 'fixed-crop'
 // Movable mode: active only when tool is 'stencil-circle'
-const isFixed = computed(() => props.fixed && !!imgEditor?.fixedStencil?.value)
-const isMovable = computed(() => !props.fixed && imgEditor?.activeTool.value === 'stencil-circle')
+const isFixed = computed(() => props.fixed && !!imgStudio?.fixedStencil?.value)
+const isMovable = computed(() => !props.fixed && imgStudio?.activeTool.value === 'stencil-circle')
 const isActive = computed(() => isFixed.value || isMovable.value)
 
 // ─── FIXED MODE STATE ──────────────────────────────────────────────────────────
@@ -47,7 +49,7 @@ const cropHeight = ref(0)
 const fixedPos = ref({ top: 0, left: 0 })
 
 const updateFixedMetrics = () => {
-  const el = imgEditor?.fixedOverlayRef?.value
+  const el = imgStudio?.fixedOverlayRef?.value
   if (!el) return
 
   const w = el.offsetWidth
@@ -81,8 +83,8 @@ const updateFixedMetrics = () => {
   }
 
   // Update editor's pan bounds
-  if (imgEditor?.panBounds) {
-    imgEditor.panBounds.value = {
+  if (imgStudio?.panBounds) {
+    imgStudio.panBounds.value = {
       top: fixedPos.value.top,
       left: fixedPos.value.left,
       width: cropWidth.value,
@@ -93,8 +95,8 @@ const updateFixedMetrics = () => {
 
 useEventListener(window, 'resize', updateFixedMetrics)
 
-if (imgEditor?.fixedOverlayRef?.value) {
-  useResizeObserver(imgEditor.fixedOverlayRef, () => {
+if (imgStudio?.fixedOverlayRef?.value) {
+  useResizeObserver(imgStudio.fixedOverlayRef, () => {
     updateFixedMetrics()
   })
 }
@@ -110,14 +112,14 @@ onUnmounted(() => {
 
 // ─── FIXED MODE APPLY ──────────────────────────────────────────────────────────
 const applyFixed = async () => {
-  const canvas = imgEditor?.getCanvas()
-  const state = imgEditor?.getImageState()
-  if (!canvas || !state || !imgEditor?.panX || !imgEditor?.panY) return
+  const canvas = imgStudio?.getCanvas()
+  const state = imgStudio?.getImageState()
+  if (!canvas || !state || !imgStudio?.panX || !imgStudio?.panY) return
 
-  const zoom = imgEditor.zoomLevel.value
-  const panX = imgEditor.panX.value
-  const panY = imgEditor.panY.value
-  const overlayRect = imgEditor.fixedOverlayRef?.value?.getBoundingClientRect()
+  const zoom = imgStudio.zoomLevel.value
+  const panX = imgStudio.panX.value
+  const panY = imgStudio.panY.value
+  const overlayRect = imgStudio.fixedOverlayRef?.value?.getBoundingClientRect()
   if (!overlayRect) return
 
   const vpCenterX = overlayRect.width / 2
@@ -150,9 +152,9 @@ const applyFixed = async () => {
     }
     tempCtx.clip()
     tempCtx.drawImage(canvas, imgCenterX - imgCropW / 2, imgCenterY - imgCropH / 2, imgCropW, imgCropH, 0, 0, destW, destH)
-    imgEditor?.commit(tempCanvas, 'fixed-crop')
-    imgEditor.panX.value = overlayRect.width / 2 - imgCropW / 2
-    imgEditor.panY.value = overlayRect.height / 2 - imgCropH / 2
+    imgStudio?.commit(tempCanvas, 'fixed-crop')
+    imgStudio.panX.value = overlayRect.width / 2 - imgCropW / 2
+    imgStudio.panY.value = overlayRect.height / 2 - imgCropH / 2
   }
 }
 
@@ -160,7 +162,7 @@ const applyFixed = async () => {
 const stencil = ref({ x: 0, y: 0, radius: 0 })
 
 const initializeStencil = () => {
-  const state = imgEditor?.getImageState()
+  const state = imgStudio?.getImageState()
   if (!state?.width || !state?.height) return
   const diameter = Math.min(state.width, state.height) * (props.initialCropPercent / 100)
   const radius = diameter / 2
@@ -171,20 +173,20 @@ const initializeStencil = () => {
 const dragMode = ref<'move' | 'resize' | null>(null)
 
 const { isInteracting, startInteraction, startData: startStencil } = useInteraction(
-  computed(() => imgEditor?.zoomLevel.value || 1),
+  computed(() => imgStudio?.zoomLevel.value || 1),
   (dx, dy, p) => {
     const start = startStencil.value as { x: number, y: number, radius: number }
-    if (!start || !imgEditor) return
-    const state = imgEditor.getImageState()
+    if (!start || !imgStudio) return
+    const state = imgStudio.getImageState()
 
     if (dragMode.value === 'move') {
       stencil.value.x = Math.max(start.radius, Math.min(start.x + dx, state.width - start.radius))
       stencil.value.y = Math.max(start.radius, Math.min(start.y + dy, state.height - start.radius))
     }
     else if (dragMode.value === 'resize') {
-      const rect = imgEditor.overlayRef.value?.getBoundingClientRect()
+      const rect = imgStudio.overlayRef.value?.getBoundingClientRect()
       if (!rect) return
-      const scale = imgEditor.zoomLevel.value
+      const scale = imgStudio.zoomLevel.value
       const absX = p.clientX - rect.left
       const absY = p.clientY - rect.top
       const centerX = start.x * scale
@@ -204,7 +206,7 @@ const startInteractionHandler = (e: MouseEvent | TouchEvent, kind: 'move' | 'res
 
 // ─── MOVABLE MODE APPLY ────────────────────────────────────────────────────────
 const applyStencil = () => {
-  const canvas = imgEditor?.getCanvas()
+  const canvas = imgStudio?.getCanvas()
   if (!canvas) return
 
   const { x, y, radius } = stencil.value
@@ -235,7 +237,7 @@ const applyStencil = () => {
     tempCtx.clip()
     tempCtx.drawImage(canvas, x - radius, y - radius, srcW, srcH, 0, 0, destW, destH)
 
-    imgEditor?.commit(tempCanvas, 'stencil-circle')
+    imgStudio?.commit(tempCanvas, 'stencil-circle')
   }
 }
 
@@ -246,17 +248,17 @@ watch(isActive, val => {
   if (val) {
     if (!props.fixed) initializeStencil()
     else updateFixedMetrics()
-    imgEditor?.registerApplyHook(applyFn.value)
+    imgStudio?.registerApplyHook(applyFn.value)
   }
   else {
-    imgEditor?.unregisterApplyHook(applyFn.value)
+    imgStudio?.unregisterApplyHook(applyFn.value)
   }
 }, { immediate: true })
 
 onUnmounted(() => {
-  imgEditor?.unregisterApplyHook(applyFn.value)
-  if (imgEditor?.panBounds) {
-    imgEditor.panBounds.value = null
+  imgStudio?.unregisterApplyHook(applyFn.value)
+  if (imgStudio?.panBounds) {
+    imgStudio.panBounds.value = null
   }
 })
 
@@ -268,7 +270,7 @@ defineExpose({
 
 <template>
   <!-- ── FIXED MODE ──────────────────────────────────────────────── -->
-  <Teleport v-if="isFixed && imgEditor?.fixedOverlayRef?.value" :to="imgEditor.fixedOverlayRef.value">
+  <Teleport v-if="isFixed && imgStudio?.fixedOverlayRef?.value" :to="imgStudio.fixedOverlayRef.value">
     <div class="absolute inset-0 pointer-events-none">
       <div
         class="absolute pointer-events-none shadow-[0_0_0_9999px_rgba(0,0,0,0.85)] z-40"
@@ -297,7 +299,7 @@ defineExpose({
   </Teleport>
 
   <!-- ── MOVABLE MODE ───────────────────────────────────────────── -->
-  <Teleport v-else-if="isMovable && imgEditor?.overlayRef.value" :to="imgEditor.overlayRef.value">
+  <Teleport v-else-if="isMovable && imgStudio?.overlayRef.value" :to="imgStudio.overlayRef.value">
     <div
       class="absolute inset-0 pointer-events-none group"
       :class="{ 'is-interacting': isInteracting }">

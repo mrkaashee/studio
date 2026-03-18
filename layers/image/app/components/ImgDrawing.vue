@@ -1,7 +1,12 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
+import { toRefs, ref, onMounted, onUnmounted, watch, inject } from 'vue'
 import { useResizeObserver, useEventListener } from '@vueuse/core'
 import type { ImageEditorContext } from '../types/editor'
 import type { ImgDrawingProps, ImgDrawingEmits } from '../types/drawing'
+import { useDrawing } from '../composables/useDrawing'
+import { useDrawingTools } from '../composables/useDrawingTools'
+import { useDrawingHistory } from '../composables/useDrawingHistory'
+import { normalizeInputEvent } from '../utils/inputHandler'
 
 /**
  * ImgDrawing Component
@@ -21,7 +26,7 @@ const props = withDefaults(defineProps<ImgDrawingProps>(), {
   maxHistorySize: 50,
 })
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 // Destructure for template usage
 const { enableBrush, enableShapes, enableEraser } = toRefs(props)
@@ -105,7 +110,7 @@ const initializeDrawing = () => {
   history.maxHistorySize.value = props.maxHistorySize
 
   // Load current image into base canvas
-  const state = imgEditor?.getImageState()
+  const state = imgStudio?.getImageState()
   if (state?.current) {
     const img = new Image()
     img.crossOrigin = 'anonymous'
@@ -154,17 +159,17 @@ const applyDrawingHook = async () => {
   if (!isActive.value) return
   const finalImage = await applyDrawing()
   if (finalImage) {
-    imgEditor?.commit(finalImage, 'drawing')
+    imgStudio?.commit(finalImage, 'drawing')
   }
   isActive.value = false
 }
 
 watch(isActive, val => {
   if (val) {
-    imgEditor?.registerApplyHook(applyDrawingHook)
+    imgStudio?.registerApplyHook(applyDrawingHook)
   }
   else {
-    imgEditor?.unregisterApplyHook(applyDrawingHook)
+    imgStudio?.unregisterApplyHook(applyDrawingHook)
   }
 }, { immediate: true })
 

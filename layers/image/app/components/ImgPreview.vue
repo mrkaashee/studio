@@ -1,4 +1,5 @@
-﻿<script lang="ts" setup>
+<script lang="ts" setup>
+import { ref, computed, inject } from 'vue'
 import type { ImageEditorContext } from '../types/editor'
 
 const props = defineProps<{
@@ -6,32 +7,32 @@ const props = defineProps<{
   size?: number
 }>()
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 const isComparing = ref(false)
 
 const currentImage = computed(() => {
-  if (!imgEditor) return ''
-  return isComparing.value && imgEditor.imageState.value.original && !props.avatarMode
-    ? imgEditor.imageState.value.original
-    : imgEditor.imageState.value.current
+  if (!imgStudio) return ''
+  return isComparing.value && imgStudio.imageState.value.original && !props.avatarMode
+    ? imgStudio.imageState.value.original
+    : imgStudio.imageState.value.current
 })
 
-const width = computed(() => imgEditor?.imageState.value.width || 0)
-const height = computed(() => imgEditor?.imageState.value.height || 0)
+const width = computed(() => imgStudio?.imageState.value.width || 0)
+const height = computed(() => imgStudio?.imageState.value.height || 0)
 
 const avatarPreviewStyle = computed(() => {
-  if (!imgEditor || !imgEditor.panBounds?.value || !props.size || !props.avatarMode) return {}
+  if (!imgStudio || !imgStudio.panBounds?.value || !props.size || !props.avatarMode) return {}
 
   const S = props.size
-  const cropW = imgEditor.panBounds.value.width || 1
+  const cropW = imgStudio.panBounds.value.width || 1
   const P = S / cropW
 
-  const imgW = imgEditor.imageState.value.width * imgEditor.zoomLevel.value
-  const imgH = imgEditor.imageState.value.height * imgEditor.zoomLevel.value
+  const imgW = imgStudio.imageState.value.width * imgStudio.zoomLevel.value
+  const imgH = imgStudio.imageState.value.height * imgStudio.zoomLevel.value
 
-  const relativeX = imgEditor.panX.value - imgEditor.panBounds.value.left
-  const relativeY = imgEditor.panY.value - imgEditor.panBounds.value.top
+  const relativeX = imgStudio.panX.value - imgStudio.panBounds.value.left
+  const relativeY = imgStudio.panY.value - imgStudio.panBounds.value.top
 
   return {
     width: `${imgW * P}px`,
@@ -60,7 +61,7 @@ const avatarPreviewStyle = computed(() => {
   </div>
 
   <!-- Normal Mode -->
-  <div v-else-if="imgEditor?.hasImage" class="space-y-3">
+  <div v-else-if="imgStudio?.hasImage" class="space-y-3">
     <div class="flex items-center justify-between px-1">
       <h3 class="text-[10px] font-bold uppercase tracking-widest text-muted">
         Preview & Compare
@@ -118,7 +119,7 @@ const avatarPreviewStyle = computed(() => {
           icon="i-lucide-download"
           color="primary"
           variant="soft"
-          @click="imgEditor?.applyAndExport('preview-export.png')" />
+          @click="imgStudio?.applyAndExport('preview-export.png')" />
       </UTooltip>
     </div>
   </div>

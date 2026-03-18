@@ -32,7 +32,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               All-in-one editor with undo/redo, history, and multiple tools in a unified interface.
             </p>
-            <UButton label="Open Editor" to="/editor" color="primary" block />
+            <UButton label="Open Editor" to="/image-studio/editor" color="primary" block />
           </UCard>
 
           <UCard>
@@ -47,7 +47,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Crop images with multiple modes: move-box, move-image, fixed, and circle shapes with zoom support.
             </p>
-            <UButton label="Open Tool" to="/cropper" block />
+            <UButton label="Open Tool" to="/image-studio/cropper" block />
           </UCard>
 
           <UCard>
@@ -62,7 +62,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Rotate and flip images with smooth animations. All transformations are applied to exports.
             </p>
-            <UButton label="Open Tool" to="/transformations" block />
+            <UButton label="Open Tool" to="/image-studio/transformations" block />
           </UCard>
 
           <UCard>
@@ -77,7 +77,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Apply professional filters like grayscale, sepia, vintage, and more with manual adjustments.
             </p>
-            <UButton label="Open Tool" to="/filters" block />
+            <UButton label="Open Tool" to="/image-studio/filters" block />
           </UCard>
 
           <UCard>
@@ -92,7 +92,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Fine-tune exposure, highlights, shadows, temperature, tint, and vibrance for perfect results.
             </p>
-            <UButton label="Open Tool" to="/adjustments" block />
+            <UButton label="Open Tool" to="/image-studio/adjustments" block />
           </UCard>
 
           <UCard>
@@ -107,7 +107,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Scale images to custom dimensions, percentages, or popular social media presets.
             </p>
-            <UButton label="Open Tool" to="/resize" block />
+            <UButton label="Open Tool" to="/image-studio/resize" block />
           </UCard>
 
           <UCard>
@@ -122,7 +122,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Reduce file size while maintaining quality. Choose format and compression level.
             </p>
-            <UButton label="Open Tool" to="/compress" block />
+            <UButton label="Open Tool" to="/image-studio/compress" block />
           </UCard>
 
           <UCard>
@@ -137,7 +137,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Convert images between PNG, JPEG, and WebP formats with quality control.
             </p>
-            <UButton label="Open Tool" to="/convert" block />
+            <UButton label="Open Tool" to="/image-studio/convert" block />
           </UCard>
 
           <UCard class="border-2 border-success">
@@ -156,7 +156,7 @@ definePageMeta({ layout: false })
             <p class="text-sm text-muted mb-4">
               Real-world examples like avatar upload, social media posts, and more use cases.
             </p>
-            <UButton label="View Examples" to="/examples" color="success" block />
+            <UButton label="View Examples" to="/image-studio/examples" color="success" block />
           </UCard>
         </div>
 

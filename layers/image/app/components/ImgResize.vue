@@ -1,10 +1,11 @@
-﻿<script lang="ts" setup>
+<script setup lang="ts">
+import { inject } from 'vue'
 import type { ImageEditorContext } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 const applyResize = (maxWidth: number, maxHeight: number) => {
-  const canvas = imgEditor?.getCanvas()
+  const canvas = imgStudio?.getCanvas()
   if (!canvas) return
 
   const srcW = canvas.width
@@ -27,7 +28,7 @@ const applyResize = (maxWidth: number, maxHeight: number) => {
 
   if (tempCtx) {
     tempCtx.drawImage(canvas, 0, 0, outW, outH)
-    imgEditor?.commit(tempCanvas, 'resize')
+    imgStudio?.commit(tempCanvas, 'resize')
   }
 }
 

@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { ref } from 'vue'
+
 const editorRef = ref()
 const transformRef = ref()
 
@@ -16,14 +18,16 @@ const downloadResult = async () => {
     icon="i-lucide-rotate-cw">
     <template #default="{ img }">
       <div class="absolute inset-0 h-full w-full">
-        <ImgEditor ref="editorRef" :src="img" borderless>
-          <template #header>
-            <div class="hidden" />
-          </template>
-          <template #default>
-            <ImgTransform ref="transformRef" />
-          </template>
-        </ImgEditor>
+        <ClientOnly>
+          <ImgStudio ref="editorRef" :src="img" borderless>
+            <template #header>
+              <div class="hidden" />
+            </template>
+            <template #default>
+              <ImgTransform ref="transformRef" />
+            </template>
+          </ImgStudio>
+        </ClientOnly>
       </div>
     </template>
 

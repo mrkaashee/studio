@@ -1,10 +1,10 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
 import { inject, computed } from 'vue'
 import type { ImageEditorContext, Layer } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const layers = computed(() => imgEditor?.layers.value || [])
+const layers = computed(() => imgStudio?.layers.value || [])
 
 const toggleVisibility = (layer: Layer) => {
   layer.visible = !layer.visible
@@ -14,13 +14,13 @@ const selectLayer = (layer: Layer) => {
   layers.value.forEach(l => l.active = false)
   layer.active = true
   if (layer.type === 'stencil') {
-    imgEditor?.activateTool(layer.id)
+    imgStudio?.activateTool(layer.id)
   }
 }
 
 const deleteLayer = (id: string) => {
-  if (imgEditor) {
-    imgEditor.layers.value = imgEditor.layers.value.filter(l => l.id !== id)
+  if (imgStudio) {
+    imgStudio.layers.value = imgStudio.layers.value.filter(l => l.id !== id)
   }
 }
 

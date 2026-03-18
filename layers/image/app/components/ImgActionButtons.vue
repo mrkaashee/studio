@@ -1,11 +1,12 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { inject, computed } from 'vue'
 import type { ImageEditorContext, ImgActionButtonsProps } from '../types/editor'
 
 const props = defineProps<ImgActionButtonsProps>()
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const activeTool = computed(() => imgEditor?.activeTool.value)
+const activeTool = computed(() => imgStudio?.activeTool.value)
 
 // List of tools that require an "Apply" step
 const isApplyToolActive = computed(() => {
@@ -14,11 +15,11 @@ const isApplyToolActive = computed(() => {
 })
 
 const startCropping = () => {
-  imgEditor?.activateTool('stencil-circle')
+  imgStudio?.activateTool('stencil-circle')
 }
 
 const executeApply = () => {
-  imgEditor?.applyAndExport(props.filename || 'export.png')
+  imgStudio?.applyAndExport(props.filename || 'export.png')
 }
 </script>
 

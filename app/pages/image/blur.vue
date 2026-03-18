@@ -1,5 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
+import { useCensor } from '../../../layers/image/app/composables/useCensor'
 
 const editorRef = ref<any>(null)
 
@@ -66,19 +67,17 @@ const resetSelection = () => {
     <template #default="{ img }">
       <div class="absolute inset-0 h-full w-full">
         <ClientOnly>
-          <ImgEditor
+          <ImgStudio
             ref="editorRef"
             :src="img"
-            borderless
-            hide-checkerboard
-            disable-panning>
+            borderless>
             <template #header>
               <div class="hidden" />
             </template>
-            <template #overlay>
-              <ImgCensor headless :censor-state="censorState" />
+            <template #default>
+              <ImgCensor :censor-state="censorState" />
             </template>
-          </ImgEditor>
+          </ImgStudio>
         </ClientOnly>
       </div>
     </template>

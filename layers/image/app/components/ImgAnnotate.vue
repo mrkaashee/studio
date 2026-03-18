@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import { ref, computed, watch, onUnmounted, inject } from 'vue'
+import { useAnnotate } from '../composables/useAnnotate'
 import { getEventPoint } from '../utils/interaction'
 import type { ImageEditorContext, AnnotationData, TextAnnotation } from '../types/editor'
 import ImgHandler from './ImgHandler.vue'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 const {
   activeTool: activeAnnotationTool,
@@ -22,19 +24,19 @@ const {
   initiateMove,
   initiateResize,
   renderToCanvas
-} = useAnnotate(computed(() => imgEditor?.zoomLevel.value || 1))
+} = useAnnotate(computed(() => imgStudio?.zoomLevel.value || 1))
 
-const isActive = computed(() => imgEditor?.activeTool.value === 'annotate')
+const isActive = computed(() => imgStudio?.activeTool.value === 'annotate')
 
 const startAnnotating = (tool: 'rect' | 'circle' | 'arrow' | 'text') => {
   selectTool(tool)
-  imgEditor?.activateTool('annotate')
+  imgStudio?.activateTool('annotate')
 }
 
 const applyAnnotations = async () => {
-  if (!imgEditor || annotations.value.length === 0) return
+  if (!imgStudio || annotations.value.length === 0) return
 
-  const canvas = imgEditor.getCanvas()
+  const canvas = imgStudio.getCanvas()
   if (!canvas) return
 
   const svg = document.querySelector('.u-img-annotate-svg') as SVGSVGElement
@@ -47,40 +49,40 @@ const applyAnnotations = async () => {
   if (ctx) {
     ctx.drawImage(canvas, 0, 0)
     await renderToCanvas(tempCanvas, svg)
-    imgEditor.commit(tempCanvas, 'annotate')
+    imgStudio.commit(tempCanvas, 'annotate')
     clearAll()
-    imgEditor.deactivateTool()
+    imgStudio.deactivateTool()
   }
 }
 
 // Register hook
 watch(isActive, val => {
   if (val) {
-    imgEditor?.registerApplyHook(applyAnnotations)
+    imgStudio?.registerApplyHook(applyAnnotations)
   }
   else {
-    imgEditor?.unregisterApplyHook(applyAnnotations)
+    imgStudio?.unregisterApplyHook(applyAnnotations)
     selectTool(null)
   }
 }, { immediate: true })
 
 const handlePointerDown = (e: MouseEvent | TouchEvent) => {
-  if (!isActive.value || !imgEditor) return
+  if (!isActive.value || !imgStudio) return
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
   const p = getEventPoint(e)
   if (!p) return
-  const x = (p.clientX - rect.left) / imgEditor.zoomLevel.value
-  const y = (p.clientY - rect.top) / imgEditor.zoomLevel.value
+  const x = (p.clientX - rect.left) / imgStudio.zoomLevel.value
+  const y = (p.clientY - rect.top) / imgStudio.zoomLevel.value
   annotatePointerDown(x, y)
 }
 
 const handlePointerMove = (e: MouseEvent | TouchEvent) => {
-  if (!isDrawing.value || !imgEditor) return
+  if (!isDrawing.value || !imgStudio) return
   const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
   const p = getEventPoint(e)
   if (!p) return
-  const x = (p.clientX - rect.left) / imgEditor.zoomLevel.value
-  const y = (p.clientY - rect.top) / imgEditor.zoomLevel.value
+  const x = (p.clientX - rect.left) / imgStudio.zoomLevel.value
+  const y = (p.clientY - rect.top) / imgStudio.zoomLevel.value
   annotatePointerMove(x, y)
 }
 
@@ -98,7 +100,7 @@ const getCircleHandleX = (ann: AnnotationData) => (ann.type === 'circle' ? ann.x
 const getCircleHandleY = (ann: AnnotationData) => (ann.type === 'circle' ? ann.y + ann.radius - 12 : 0)
 
 onUnmounted(() => {
-  imgEditor?.unregisterApplyHook(applyAnnotations)
+  imgStudio?.unregisterApplyHook(applyAnnotations)
 })
 </script>
 
@@ -190,12 +192,12 @@ onUnmounted(() => {
           color="neutral"
           variant="ghost"
           class="flex-1"
-          @click="imgEditor?.cancelTool()" />
+          @click="imgStudio?.cancelTool()" />
         <UButton
           label="Done"
           color="primary"
           class="flex-1"
-          @click="imgEditor?.deactivateTool()" />
+          @click="imgStudio?.deactivateTool()" />
       </div>
 
       <div v-if="annotations.length > 0" class="pt-2">
@@ -208,7 +210,7 @@ onUnmounted(() => {
       </div>
     </div>
 
-    <Teleport v-if="isActive && imgEditor?.overlayRef.value" :to="imgEditor.overlayRef.value">
+    <Teleport v-if="isActive && imgStudio?.overlayRef.value" :to="imgStudio.overlayRef.value">
       <svg
         class="u-img-annotate-svg absolute inset-0 w-full h-full pointer-events-auto overflow-visible"
         style="cursor: crosshair;"

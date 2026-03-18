@@ -15,25 +15,24 @@
               Drag and zoom your image behind a fixed 16:9 crop window — like setting a cover photo.
             </p>
           </div>
-          <UButton label="← Back" to="/examples" variant="ghost" />
+          <UButton label="← Back" to="/image-studio/examples" variant="ghost" />
         </div>
 
         <!-- Editor: tall enough to give the 16:9 mask room to breathe -->
         <div class="h-120 border border-muted rounded-xl overflow-hidden shadow-2xl">
-          <!-- shape="rect" + aspectRatio constrains the crop window to the given ratio -->
-          <ImgEditor fixed-stencil src="https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg">
-            <ImgEditorToolbar>
+          <ImgStudio
+            fixed-stencil
+            src="https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg"
+            :cropper="{ shape: 'rect', aspectRatio: 16 / 9, cropPercent: 88 }">
+            <ImgStudioToolbar>
               <template #right>
                 <ImgActionButtons filename="banner.png" />
               </template>
-            </ImgEditorToolbar>
+            </ImgStudioToolbar>
 
             <!-- Upload from file / URL -->
             <ImgUpload />
-
-            <!-- Fixed 16:9 rectangular mask (fixedStencil) -->
-            <CircleStencil fixed shape="rect" :aspect-ratio="16 / 9" :crop-percent="88" />
-          </ImgEditor>
+          </ImgStudio>
         </div>
 
         <!-- Common ratios quick-reference -->

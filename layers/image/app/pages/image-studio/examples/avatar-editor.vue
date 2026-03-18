@@ -1,5 +1,7 @@
-﻿<script lang="ts" setup>
-import type { ChangeEvent } from '../../types/editor'
+<script lang="ts" setup>
+import type { ChangeEvent } from '../../../types/editor'
+
+const img = ref('https://images.pexels.com/photos/1036622/pexels-photo-1036622.jpeg')
 
 const onChange = (payload: ChangeEvent) => {
   console.log('Editor changed:', payload)
@@ -11,10 +13,12 @@ const onChange = (payload: ChangeEvent) => {
     <UContainer class="py-10">
       <div class="max-w-4xl mx-auto space-y-6">
         <div class="aspect-square h-160 mx-auto border border-muted rounded-xl overflow-hidden shadow-2xl mb-10 bg-black/5">
-          <ImgEditor
+          <ImgStudio
+            :src="img"
             fixed-stencil
             restrict-to-bounds
             :min-zoom="1"
+            :cropper="{ outputWidth: 256, outputHeight: 256, cropPercent: 100 }"
             @change="onChange">
             <!-- Using the new header slot for direct API access -->
             <template #header="{ editor }">
@@ -47,16 +51,11 @@ const onChange = (payload: ChangeEvent) => {
                     icon="i-lucide-download"
                     color="primary"
                     @click="editor.applyAndExport('avatar.png')" />
-                  <UButton label="← Back" to="/examples" variant="ghost" />
+                  <UButton label="← Back" to="/image-studio/examples" variant="ghost" />
                 </div>
               </div>
             </template>
-
-            <!-- Fixed center circle mask (fixedStencil) -->
-            <template #default="{ editor }">
-              <CircleStencil v-if="editor.hasImage.value" fixed :crop-percent="100" :output-width="256" :output-height="256" />
-            </template>
-          </ImgEditor>
+          </ImgStudio>
         </div>
 
         <div class="p-4 bg-info/10 rounded-lg border border-info/30">

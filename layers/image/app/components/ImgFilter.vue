@@ -1,7 +1,8 @@
-<script lang="ts" setup>
+<script setup lang="ts">
+import { ref, inject, watch, onUnmounted } from 'vue'
 import type { ImageEditorContext, FilterOptions } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 const currentFilters = ref<FilterOptions>({
   brightness: 100,
@@ -27,8 +28,8 @@ const currentFilters = ref<FilterOptions>({
 let commitTimeout: ReturnType<typeof setTimeout> | null = null
 
 const bakeFilters = async (shouldCommit: boolean = true) => {
-  const canvas = imgEditor?.getCanvas()
-  if (!canvas || !imgEditor || !imgEditor.processImage) return
+  const canvas = imgStudio?.getCanvas()
+  if (!canvas || !imgStudio || !imgStudio.processImage) return
 
   const filters = currentFilters.value
   const needsWorker = filters.exposure !== 0
@@ -60,8 +61,8 @@ const bakeFilters = async (shouldCommit: boolean = true) => {
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       ctx.drawImage(tempCanvas, 0, 0)
       ctx.filter = 'none'
-      imgEditor.canvasPreviewStyle.value = {}
-      if (shouldCommit) imgEditor.commit(canvas, 'filter')
+      imgStudio.canvasPreviewStyle.value = {}
+      if (shouldCommit) imgStudio.commit(canvas, 'filter')
     }
     return
   }
@@ -71,7 +72,7 @@ const bakeFilters = async (shouldCommit: boolean = true) => {
   if (!ctx) return
   const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
 
-  const result = await imgEditor.processImage(imageData, {
+  const result = await imgStudio.processImage(imageData, {
     brightness: currentFilters.value.brightness ?? 100,
     contrast: currentFilters.value.contrast ?? 100,
     saturate: currentFilters.value.saturate ?? 100,
@@ -91,8 +92,8 @@ const bakeFilters = async (shouldCommit: boolean = true) => {
   })
 
   ctx.putImageData(result, 0, 0)
-  imgEditor.canvasPreviewStyle.value = {}
-  if (shouldCommit) imgEditor.commit(canvas, 'filter')
+  imgStudio.canvasPreviewStyle.value = {}
+  if (shouldCommit) imgStudio.commit(canvas, 'filter')
 }
 
 const applyFilter = (filters: FilterOptions) => {
@@ -101,8 +102,8 @@ const applyFilter = (filters: FilterOptions) => {
   const filterStr = buildFilterString(currentFilters.value)
 
   // CSS Preview for zero-lag interaction
-  if (imgEditor) {
-    imgEditor.canvasPreviewStyle.value = { filter: filterStr }
+  if (imgStudio) {
+    imgStudio.canvasPreviewStyle.value = { filter: filterStr }
   }
 
   // Debounce the actual canvas baking (expensive)
@@ -112,14 +113,14 @@ const applyFilter = (filters: FilterOptions) => {
   }, 1000)
 }
 
-watch(() => imgEditor?.activeTool.value, tool => {
+watch(() => imgStudio?.activeTool.value, tool => {
   if (tool === 'filter') {
-    imgEditor?.registerApplyHook(bakeFilters)
+    imgStudio?.registerApplyHook(bakeFilters)
   }
   else {
-    imgEditor?.unregisterApplyHook(bakeFilters)
+    imgStudio?.unregisterApplyHook(bakeFilters)
     // Clear preview style on tool change to avoid ghosting
-    if (imgEditor) imgEditor.canvasPreviewStyle.value = {}
+    if (imgStudio) imgStudio.canvasPreviewStyle.value = {}
   }
 }, { immediate: true })
 
@@ -173,14 +174,14 @@ const resetFilters = async () => {
   }
 
   // Clear the CSS preview filter immediately
-  if (imgEditor) imgEditor.canvasPreviewStyle.value = {}
+  if (imgStudio) imgStudio.canvasPreviewStyle.value = {}
 
   // Reload the canvas from the last committed snapshot.
   // Non-committing bakeFilters(false) calls never update imageState.current,
   // so reloading it discards any baked preview pixels without touching history.
-  const lastCommitted = imgEditor?.imageState.value.current
-  if (lastCommitted && imgEditor) {
-    await imgEditor.loadImage(lastCommitted, true, true)
+  const lastCommitted = imgStudio?.imageState.value.current
+  if (lastCommitted && imgStudio) {
+    await imgStudio.loadImage(lastCommitted, true, true)
   }
 }
 

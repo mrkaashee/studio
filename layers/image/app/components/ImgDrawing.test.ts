@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Unit Tests for ImgDrawing Component
  *
  * Tests component mounting, prop reactivity, event emission,
@@ -28,7 +28,7 @@ describe('ImgDrawing Component', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
         provide: {
-          imgEditor: {
+          imgStudio: {
             commit: vi.fn(),
             getImageState: vi.fn(() => ({ current: 'test.png' })),
           },
@@ -72,7 +72,7 @@ describe('ImgDrawing Component', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
         provide: {
-          imgEditor: { commit: vi.fn(), getImageState: vi.fn() },
+          imgStudio: { commit: vi.fn(), getImageState: vi.fn() },
         },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
@@ -107,7 +107,7 @@ describe('ImgDrawing Component', () => {
       },
       global: {
         provide: {
-          imgEditor: { commit: vi.fn(), getImageState: vi.fn() },
+          imgStudio: { commit: vi.fn(), getImageState: vi.fn() },
         },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
@@ -131,7 +131,7 @@ describe('ImgDrawing Component', () => {
   test('activate() initializes drawing system', async () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -165,7 +165,7 @@ describe('ImgDrawing Component', () => {
   test('deactivate() clears drawing state', async () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -201,7 +201,7 @@ describe('ImgDrawing Component', () => {
   test('multiple activate() calls are idempotent', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -229,7 +229,7 @@ describe('ImgDrawing Component', () => {
   test('multiple deactivate() calls are idempotent', async () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -259,7 +259,7 @@ describe('ImgDrawing Component', () => {
   test('emits tool-change event when tool changes', async () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -291,7 +291,7 @@ describe('ImgDrawing Component', () => {
   test('emits layer-added event when layer is added', async () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -342,7 +342,7 @@ describe('ImgDrawing Component', () => {
   test('emits properties-change event when properties change', async () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -380,7 +380,7 @@ describe('ImgDrawing Component', () => {
   test('cleans up resources on unmount', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -407,7 +407,7 @@ describe('ImgDrawing Component', () => {
   test('exposes required methods and state', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true, USlider: true, UCheckbox: true, UDivider: true },
       },
     })
@@ -438,7 +438,7 @@ describe('ImgDrawing Component', () => {
   test('sets canvas refs correctly', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true },
       },
     })
@@ -459,7 +459,7 @@ describe('ImgDrawing Component', () => {
   test('handles missing canvas refs gracefully', () => {
     const wrapper = mount(ImgDrawing, {
       global: {
-        provide: { imgEditor: { commit: vi.fn(), getImageState: vi.fn() } },
+        provide: { imgStudio: { commit: vi.fn(), getImageState: vi.fn() } },
         stubs: { UButton: true, UIcon: true, UTooltip: true, UInput: true, UButtonGroup: true },
       },
     })

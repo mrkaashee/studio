@@ -1,7 +1,8 @@
-<script lang="ts" setup>
+<script setup lang="ts">
+import { ref, inject } from 'vue'
 import type { ImageEditorContext, TransformState } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 const currentTransform = ref<TransformState>({
   rotation: 0,
@@ -10,7 +11,7 @@ const currentTransform = ref<TransformState>({
 })
 
 const applyTransform = (angle = 0, h = false, v = false) => {
-  const canvas = imgEditor?.getCanvas()
+  const canvas = imgStudio?.getCanvas()
   if (!canvas) return
 
   const needsDimensionSwap = Math.abs(angle) % 180 === 90
@@ -39,8 +40,8 @@ const applyTransform = (angle = 0, h = false, v = false) => {
 
   // Optimization: Pass the canvas directly instead of generating
   // a blocking data URL on the main thread
-  imgEditor?.commit(tempCanvas, 'transform')
-  imgEditor?.resetZoom()
+  imgStudio?.commit(tempCanvas, 'transform')
+  imgStudio?.resetZoom()
 }
 
 const rotate = (angle: number) => {

@@ -1,10 +1,10 @@
-﻿<script lang="ts" setup>
-import ImgEditor from '../../components/ImgEditor.vue'
-import CircleStencil from '../../components/CircleStencil.vue'
+<script lang="ts" setup>
+import ImgStudio from '../../../components/ImgStudio.vue'
+import CircleStencil from '../../../components/CircleStencil.vue'
 
 const fileInput = ref<HTMLInputElement | null>(null)
 const imageUrl = ref<string | null>(null)
-const editorRef = ref<InstanceType<typeof ImgEditor> | null>(null)
+const editorRef = ref<InstanceType<typeof ImgStudio> | null>(null)
 const stencilRef = ref<InstanceType<typeof CircleStencil> | null>(null)
 
 function handleFileSelect(event: Event) {
@@ -56,7 +56,7 @@ async function handleSave() {
               Upload and position your profile picture
             </p>
           </div>
-          <UButton label="← Back" to="/examples" variant="ghost" />
+          <UButton label="← Back" to="/image-studio/examples" variant="ghost" />
         </div>
 
         <!-- Main Content -->
@@ -82,7 +82,7 @@ async function handleSave() {
               <!-- Modular Nuxt-Cropper Editor -->
               <div v-else class="space-y-4">
                 <div class="relative bg-muted rounded-lg overflow-hidden border border-default shadow-inner" style="height: 400px;">
-                  <ImgEditor ref="editorRef" fixed-stencil :src="imageUrl">
+                  <ImgStudio ref="editorRef" fixed-stencil :src="imageUrl">
                     <CircleStencil ref="stencilRef" fixed :crop-percent="90" />
 
                     <!-- Teleport the previews out of the hidden slot! -->
@@ -126,7 +126,7 @@ async function handleSave() {
                         </div>
                       </div>
                     </Teleport>
-                  </ImgEditor>
+                  </ImgStudio>
                 </div>
 
                 <!-- Controls -->

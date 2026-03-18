@@ -1,4 +1,6 @@
 <script lang="ts" setup>
+import { ref } from 'vue'
+
 const editorRef = ref()
 
 const downloadResult = async () => {
@@ -15,14 +17,16 @@ const downloadResult = async () => {
     icon="i-lucide-pencil-line">
     <template #default="{ img }">
       <div class="absolute inset-0 h-full w-full">
-        <ImgEditor ref="editorRef" :src="img" borderless>
-          <template #header>
-            <div class="hidden" />
-          </template>
-          <template #default>
-            <ImgAnnotate />
-          </template>
-        </ImgEditor>
+        <ClientOnly>
+          <ImgStudio ref="editorRef" :src="img" borderless>
+            <template #header>
+              <div class="hidden" />
+            </template>
+            <template #default>
+              <ImgAnnotate />
+            </template>
+          </ImgStudio>
+        </ClientOnly>
       </div>
     </template>
 

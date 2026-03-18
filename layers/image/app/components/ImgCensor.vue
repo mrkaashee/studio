@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, inject, watch, onUnmounted, onMounted } from 'vue'
+import { ref, computed, inject, watch, onUnmounted, onMounted } from 'vue'
+import { useCensor } from '../composables/useCensor'
 import type { ImageEditorContext } from '../types/editor'
 import { getEventPoint } from '../utils/interaction'
 import ImgHandler from './ImgHandler.vue'
@@ -10,10 +11,10 @@ const props = defineProps<{
   censorState?: ReturnType<typeof useCensor>
 }>()
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 // If no state provided, use local (backwards compatibility)
-const internalState = props.censorState ? undefined : useCensor(computed(() => imgEditor?.zoomLevel.value || 1))
+const internalState = props.censorState ? undefined : useCensor(computed(() => imgStudio?.zoomLevel.value || 1))
 
 // Resolve state source correctly
 const state = computed(() => (props.censorState || internalState) as ReturnType<typeof useCensor>)
@@ -40,17 +41,17 @@ const selections = computed(() => state.value.selections.value)
 const activeSelectionId = computed(() => state.value.activeSelectionId.value)
 const isInteracting = computed(() => state.value.isInteracting.value)
 
-const isActive = computed(() => imgEditor?.activeTool.value === 'censor')
+const isActive = computed(() => imgStudio?.activeTool.value === 'censor')
 
 const applyCensor = () => {
-  if (!imgEditor) return
-  const canvas = imgEditor.getCanvas()
+  if (!imgStudio) return
+  const canvas = imgStudio.getCanvas()
   if (!canvas) return
 
   const tempCanvas = state.value.getCensoredCanvas(canvas)
   if (tempCanvas) {
-    imgEditor.commit(tempCanvas, 'censor')
-    imgEditor.deactivateTool()
+    imgStudio.commit(tempCanvas, 'censor')
+    imgStudio.deactivateTool()
   }
 }
 
@@ -60,8 +61,8 @@ onMounted(() => {
 
 watch(isActive, val => {
   if (val) {
-    imgEditor?.registerApplyHook(applyCensor)
-    const editorState = imgEditor?.getImageState()
+    imgStudio?.registerApplyHook(applyCensor)
+    const editorState = imgStudio?.getImageState()
     if (editorState?.width && editorState?.height) {
       if (selections.value.length === 0) {
         state.value.initializeSelection(editorState.width, editorState.height)
@@ -69,17 +70,17 @@ watch(isActive, val => {
     }
   }
   else {
-    imgEditor?.unregisterApplyHook(applyCensor)
+    imgStudio?.unregisterApplyHook(applyCensor)
   }
 }, { immediate: true })
 
 onUnmounted(() => {
-  imgEditor?.unregisterApplyHook(applyCensor)
+  imgStudio?.unregisterApplyHook(applyCensor)
 })
 
 // Interaction Handler
 const handleMouseDown = (e: MouseEvent | TouchEvent) => {
-  if (!isActive.value || !useArea.value || !imgEditor) return
+  if (!isActive.value || !useArea.value || !imgStudio) return
 
   const target = e.target as HTMLElement
   if (target.closest('.u-img-censor-box')) return
@@ -89,13 +90,13 @@ const handleMouseDown = (e: MouseEvent | TouchEvent) => {
   const p = getEventPoint(e)
   if (!p) return
 
-  const x = (p.clientX - rect.left) / imgEditor.zoomLevel.value
-  const y = (p.clientY - rect.top) / imgEditor.zoomLevel.value
+  const x = (p.clientX - rect.left) / imgStudio.zoomLevel.value
+  const y = (p.clientY - rect.top) / imgStudio.zoomLevel.value
 
   state.value.startNewSelection(e, x, y)
 }
 
-const counterScale = computed(() => 1 / (imgEditor?.zoomLevel.value || 1))
+const counterScale = computed(() => 1 / (imgStudio?.zoomLevel.value || 1))
 
 defineExpose({
   mode: state.value.mode,
@@ -126,7 +127,7 @@ defineExpose({
           color="neutral"
           variant="soft"
           block
-          @click="imgEditor?.activateTool('censor')" />
+          @click="imgStudio?.activateTool('censor')" />
       </div>
 
       <div v-else class="space-y-4 pt-2">
@@ -166,7 +167,7 @@ defineExpose({
             color="neutral"
             variant="ghost"
             class="flex-1"
-            @click="imgEditor?.cancelTool()" />
+            @click="imgStudio?.cancelTool()" />
           <UButton
             label="Apply"
             color="primary"

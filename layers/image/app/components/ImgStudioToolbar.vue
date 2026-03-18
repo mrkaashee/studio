@@ -1,31 +1,32 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { inject, computed } from 'vue'
 import type { ImageEditorContext } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-if (!imgEditor) {
-  throw new Error('ImgEditorToolbar must be used within an ImgEditor component')
+if (!imgStudio) {
+  throw new Error('ImgStudioToolbar must be used within an ImgStudio component')
 }
 
 // Map context values for easier template access
-const canUndo = computed(() => imgEditor.canUndo?.value ?? false)
-const canRedo = computed(() => imgEditor.canRedo?.value ?? false)
-const zoomLevel = computed(() => imgEditor.zoomLevel.value)
+const canUndo = computed(() => imgStudio.canUndo?.value ?? false)
+const canRedo = computed(() => imgStudio.canRedo?.value ?? false)
+const zoomLevel = computed(() => imgStudio.zoomLevel.value)
 const zoom = computed({
-  get: () => imgEditor.zoomLevel.value,
-  set: val => { imgEditor.zoomLevel.value = val },
+  get: () => imgStudio.zoomLevel.value,
+  set: val => { imgStudio.zoomLevel.value = val },
 })
 
-const undo = () => imgEditor.undo?.()
-const redo = () => imgEditor.redo?.()
-const resetAll = () => imgEditor.resetAll?.()
-const zoomIn = () => imgEditor.zoomIn?.()
-const zoomOut = () => imgEditor.zoomOut?.()
-const resetZoom = () => imgEditor.resetZoom?.()
+const undo = () => imgStudio.undo?.()
+const redo = () => imgStudio.redo?.()
+const resetAll = () => imgStudio.resetAll?.()
+const zoomIn = () => imgStudio.zoomIn?.()
+const zoomOut = () => imgStudio.zoomOut?.()
+const resetZoom = () => imgStudio.resetZoom?.()
 </script>
 
 <template>
-  <Teleport v-if="imgEditor?.toolbarTargetRef?.value" :to="imgEditor.toolbarTargetRef.value">
+  <Teleport v-if="imgStudio?.toolbarTargetRef?.value" :to="imgStudio.toolbarTargetRef.value">
     <div class="flex items-center justify-between gap-4 px-4 py-2 bg-elevated/80 backdrop-blur-md border-b border-muted z-20">
       <!-- History Controls -->
       <div class="flex items-center gap-2">
@@ -64,8 +65,8 @@ const resetZoom = () => imgEditor.resetZoom?.()
         <div class="flex-1 px-2 group flex items-center gap-3">
           <USlider
             v-model="zoom"
-            :min="imgEditor.minZoom.value"
-            :max="imgEditor.maxZoom.value"
+            :min="imgStudio.minZoom.value"
+            :max="imgStudio.maxZoom.value"
             :step="0.01"
             size="sm"
             class="flex-1" />

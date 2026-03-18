@@ -154,6 +154,14 @@ export const useToolsList = () => {
     },
     // Image
     {
+      icon: 'i-lucide-palette',
+      label: 'Image Studio',
+      description: 'Advanced all-in-one image editor with layers, filters, and more.',
+      status: 'active',
+      category: { icon: 'i-lucide-image', label: 'Image' },
+      to: '/image-studio',
+    },
+    {
       icon: 'i-lucide-crop',
       label: 'Image Cropper',
       description: 'Crop images to any aspect ratio with precision.',

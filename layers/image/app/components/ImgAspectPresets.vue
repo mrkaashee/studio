@@ -1,7 +1,8 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { inject, ref } from 'vue'
 import type { ImageEditorContext, AspectPreset } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
 const presets: AspectPreset[] = [
   { id: 'ig-post', name: 'IG Post', icon: 'i-simple-icons-instagram', ratio: 1 / 1, platform: 'Instagram' },
@@ -18,9 +19,9 @@ const activePreset = ref<string | null>(null)
 
 const applyRatio = (preset: AspectPreset) => {
   activePreset.value = preset.id
-  if (imgEditor) {
-    imgEditor.aspectRatio.value = preset.ratio
-    imgEditor.activateTool('stencil-rect')
+  if (imgStudio) {
+    imgStudio.aspectRatio.value = preset.ratio
+    imgStudio.activateTool('stencil-rect')
   }
 }
 </script>

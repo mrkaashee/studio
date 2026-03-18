@@ -1,12 +1,13 @@
-﻿<script setup lang="ts">
+<script setup lang="ts">
+import { ref, inject } from 'vue'
 import type { ImageEditorContext } from '../types/editor'
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 const imageUrl = ref('')
 
 const loadFromUrl = () => {
-  if (imageUrl.value.trim() && imgEditor) {
-    imgEditor.loadImage(imageUrl.value.trim())
+  if (imageUrl.value.trim() && imgStudio) {
+    imgStudio.loadImage(imageUrl.value.trim())
     imageUrl.value = ''
   }
 }
@@ -22,7 +23,7 @@ const loadFromUrl = () => {
     <div class="space-y-4">
       <div
         class="group relative flex items-center justify-center p-6 border-2 border-dashed border-muted rounded-xl hover:border-primary transition-all cursor-pointer bg-muted"
-        @click="() => imgEditor?.triggerFileInput()">
+        @click="() => imgStudio?.triggerFileInput()">
         <div class="text-center">
           <UIcon name="i-lucide-upload-cloud" class="w-8 h-8 mx-auto text-muted mb-2" />
           <p class="text-sm font-medium text-default">

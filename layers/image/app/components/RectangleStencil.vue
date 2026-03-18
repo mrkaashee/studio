@@ -25,20 +25,20 @@ const emit = defineEmits<{
   (e: 'change', coords: { x: number, y: number, width: number, height: number }): void
 }>()
 
-const imgEditor = inject<ImageEditorContext>('imgEditor')
+const imgStudio = inject<ImageEditorContext>('imgStudio')
 
-const isActive = computed(() => imgEditor?.activeTool.value === 'crop' || imgEditor?.activeTool.value === 'stencil-rect')
+const isActive = computed(() => imgStudio?.activeTool.value === 'crop' || imgStudio?.activeTool.value === 'stencil-rect')
 
 // Stencil selection state (in image pixels)
 const stencil = ref({ x: 0, y: 0, width: 0, height: 0 })
 
 const initializeStencil = () => {
-  const state = imgEditor?.getImageState()
+  const state = imgStudio?.getImageState()
   if (!state?.width || !state?.height) return
 
   const iw = state.width
   const ih = state.height
-  const ar = imgEditor?.aspectRatio.value || props.aspectRatio || 0
+  const ar = imgStudio?.aspectRatio.value || props.aspectRatio || 0
 
   let w = Math.min(iw, ih) * (props.initialCropPercent / 100)
   let h = ar ? w / ar : w
@@ -64,11 +64,11 @@ const {
   startInteraction,
   startData: startStencil
 } = useInteraction(
-  computed(() => imgEditor?.zoomLevel.value || 1),
+  computed(() => imgStudio?.zoomLevel.value || 1),
   (dx, dy) => {
     const start = startStencil.value as Rect
-    if (!start || !imgEditor) return
-    const state = imgEditor.getImageState()
+    if (!start || !imgStudio) return
+    const state = imgStudio.getImageState()
     const bounds = { width: state.width, height: state.height }
 
     if (dragMode.value === 'move') {
@@ -76,7 +76,7 @@ const {
     }
     else if (dragMode.value === 'resize') {
       stencil.value = calculateResize(start, dx, dy, dragHandle.value!, {
-        aspectRatio: imgEditor.aspectRatio.value || props.aspectRatio,
+        aspectRatio: imgStudio.aspectRatio.value || props.aspectRatio,
         minWidth: props.minWidth,
         minHeight: props.minHeight,
         bounds
@@ -93,8 +93,8 @@ const startInteractionHandler = (e: MouseEvent | TouchEvent, kind: 'move' | 'res
 }
 
 const applyStencil = () => {
-  const canvas = imgEditor?.getCanvas()
-  if (!canvas || !imgEditor) return
+  const canvas = imgStudio?.getCanvas()
+  if (!canvas || !imgStudio) return
 
   const ctx = canvas.getContext('2d')
   if (!ctx) return
@@ -115,25 +115,25 @@ const applyStencil = () => {
     0, 0, destW, destH
   )
 
-  imgEditor.commit(tempCanvas, 'stencil-rectangle')
+  imgStudio.commit(tempCanvas, 'stencil-rectangle')
 }
 
 watch(isActive, val => {
   if (val) {
     initializeStencil()
-    imgEditor?.registerApplyHook(applyStencil)
+    imgStudio?.registerApplyHook(applyStencil)
   }
   else {
-    imgEditor?.unregisterApplyHook(applyStencil)
+    imgStudio?.unregisterApplyHook(applyStencil)
   }
 }, { immediate: true })
 
-watch(() => imgEditor?.aspectRatio.value, () => {
+watch(() => imgStudio?.aspectRatio.value, () => {
   if (isActive.value) initializeStencil()
 })
 
 onUnmounted(() => {
-  imgEditor?.unregisterApplyHook(applyStencil)
+  imgStudio?.unregisterApplyHook(applyStencil)
 })
 
 defineExpose({
@@ -144,7 +144,7 @@ defineExpose({
 </script>
 
 <template>
-  <Teleport v-if="isActive && imgEditor?.overlayRef.value" :to="imgEditor.overlayRef.value">
+  <Teleport v-if="isActive && imgStudio?.overlayRef.value" :to="imgStudio.overlayRef.value">
     <div
       class="absolute inset-0 pointer-events-none group"
       :class="{ 'is-interacting': isInteracting }">
@@ -197,7 +197,7 @@ defineExpose({
         <ImgHandler position="br" @mousedown.stop="startInteractionHandler($event, 'resize', 'br')" />
 
         <!-- Edge Handlers for non-fixed AR -->
-        <template v-if="!imgEditor?.aspectRatio.value">
+        <template v-if="!imgStudio?.aspectRatio.value">
           <ImgHandler position="t" @mousedown.stop="startInteractionHandler($event, 'resize', 't')" />
           <ImgHandler position="b" @mousedown.stop="startInteractionHandler($event, 'resize', 'b')" />
           <ImgHandler position="l" @mousedown.stop="startInteractionHandler($event, 'resize', 'l')" />
