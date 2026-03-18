@@ -72,11 +72,10 @@ const getLayerIcon = (type: string) => {
       <div
         v-for="layer in layers"
         :key="layer.id"
-        :class="[
-          resUI.item(),
-          layer.active && resUI.itemActive(),
-          !layer.visible && resUI.itemHidden(),
-        ]"
+        :class="resUI.root({
+          active: layer.active,
+          hidden: !layer.visible,
+        })"
         @click="selectLayer(layer)">
         <div
           :class="resUI.visibilityIcon()"

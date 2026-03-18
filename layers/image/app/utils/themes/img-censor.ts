@@ -1,6 +1,6 @@
 export default {
   slots: {
-    root: 'u-img-censor',
+    root: '',
     sidebar: 'space-y-4',
     header: 'flex items-center justify-between',
     title: 'text-[10px] font-bold uppercase tracking-widest text-muted',
@@ -12,31 +12,48 @@ export default {
     propValue: 'text-[10px] text-muted uppercase font-medium',
     propStack: 'space-y-1.5',
     actionButtons: 'flex gap-2',
-    overlay: 'u-img-censor-overlay absolute inset-0 w-full h-full pointer-events-auto cursor-crosshair overflow-visible',
-    box: 'u-img-censor-box absolute pointer-events-auto cursor-move group',
+    overlay: 'absolute inset-0 w-full h-full pointer-events-auto cursor-crosshair overflow-visible',
+    box: 'absolute pointer-events-auto cursor-move group contain-[layout_size_style] [will-change:transform,width,height] outline-dashed outline-[var(--outline-width)] outline-white/50 transition-[outline] duration-200',
     deleteButton: 'absolute pointer-events-auto bg-black text-white rounded-full flex items-center justify-center cursor-pointer hover:bg-red-500 transition-colors z-50 shadow-lg',
-    selectionHighlight: 'absolute inset-0 group-[.is-interacting]:bg-primary/30 border-transparent transition-all duration-200 group-[.is-interacting]:border-primary',
-  },
+    selectionHighlight: 'absolute inset-0 border-transparent transition-all duration-200',
+  } as const,
   variants: {
     interacting: {
       true: {
-        box: 'is-interacting',
+        selectionHighlight: 'bg-primary/30 border-primary',
       },
     },
     active: {
       true: {
-        box: 'is-active',
+        box: 'outline-solid outline-[var(--active-outline)] outline-white/90 shadow-[0_0_0_var(--shadow-width)_black,0_0_0_4000px_rgba(0,0,0,0.4)]',
+      },
+      false: {
+        box: 'shadow-none',
       },
     },
     blur: {
-      true: {
-        box: 'is-blur',
-      },
+      true: {},
     },
     pixelate: {
-      true: {
-        box: 'is-pixelate',
+      true: {},
+    },
+  } as const,
+  compoundVariants: [
+    {
+      active: true,
+      interacting: false,
+      blur: true,
+      class: {
+        box: 'backdrop-blur-[var(--intensity)]',
       },
     },
-  },
-} as const
+    {
+      active: true,
+      interacting: false,
+      pixelate: true,
+      class: {
+        box: 'backdrop-blur-[var(--pixel-intensity)] contrast-[200%] grayscale-[50%]',
+      },
+    },
+  ],
+}

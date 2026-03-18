@@ -269,33 +269,3 @@ defineExpose({
     </Teleport>
   </div>
 </template>
-
-<style scoped>
-.u-img-censor {
-  display: contents;
-}
-
-.u-img-censor-box {
-  contain: layout size style;
-  will-change: transform, width, height;
-  outline: var(--outline-width) dashed rgba(255,255,255,0.5);
-  transition: outline 0.2s;
-}
-
-.u-img-censor-box.is-active {
-  outline: var(--active-outline) solid rgba(255,255,255,0.9);
-}
-
-.u-img-censor-box.is-active:not(.is-interacting) {
-  box-shadow: 0 0 0 var(--shadow-width) black, 0 0 0 4000px rgba(0,0,0,0.4);
-}
-
-/* Fast CSS variables for backdrop filters instead of string interpolation */
-.u-img-censor-box:not(.is-interacting).is-blur {
-  backdrop-filter: blur(var(--intensity));
-}
-
-.u-img-censor-box:not(.is-interacting).is-pixelate {
-  backdrop-filter: blur(var(--pixel-intensity)) contrast(200%) grayscale(50%);
-}
-</style>

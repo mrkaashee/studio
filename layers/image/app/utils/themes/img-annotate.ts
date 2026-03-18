@@ -14,6 +14,6 @@ export default {
     globalProps: 'space-y-4 border-t border-default pt-4',
     actionButtons: 'flex gap-2',
     applyButton: 'pt-2',
-    svg: 'u-img-annotate-svg absolute inset-0 w-full h-full pointer-events-auto overflow-visible'
+    svg: 'absolute inset-0 w-full h-full pointer-events-auto overflow-visible'
   }
 } as const

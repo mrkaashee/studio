@@ -52,11 +52,11 @@ const dotStyle = computed(() => {
 
 <template>
   <div
-    :class="[resUI.root(), { 'group is-active': props.active }, handlerCfg?.class]"
+    :class="resUI.root({ active: props.active, class: handlerCfg?.class })"
     :style="{ cursor: cursorMap[props.position] }">
     <!-- Inner Dot -->
     <div
-      :class="[resUI.dot(), handlerCfg?.color ? '' : 'bg-primary border-white shadow-md shadow-primary/20']"
+      :class="resUI.dot({ customColor: !!handlerCfg?.color })"
       :style="dotStyle" />
 
     <!-- Glow Effect -->

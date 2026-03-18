@@ -141,10 +141,3 @@ onUnmounted(cleanup)
     </div>
   </div>
 </template>
-
-<style scoped>
-/* Prevent any default browser behavior that could cause hanging on double-tap */
-.touch-none {
-  touch-action: none;
-}
-</style>

@@ -50,7 +50,7 @@ export default {
     },
     hasBoard: {
       true: {
-        viewport: 'bg-inverted',
+        viewport: 'bg-inverted [background-image:linear-gradient(45deg,#151515_25%,transparent_25%),linear-gradient(-45deg,#151515_25%,transparent_25%),linear-gradient(45deg,transparent_75%,#151515_75%),linear-gradient(-45deg,transparent_75%,#151515_75%)] [background-size:20px_20px] [background-position:0_0,0_10px,10px_-10px,-10px_0px]',
       },
       false: {
         viewport: 'bg-default',
@@ -63,7 +63,7 @@ export default {
     },
     interacting: {
       true: {
-        viewport: 'is-interacting',
+        viewport: '',
       },
     },
     panning: {
@@ -77,6 +77,11 @@ export default {
       },
       false: {
         canvasWrapper: 'opacity-0',
+      },
+    },
+    hidden: {
+      true: {
+        canvas: 'hidden',
       },
     },
   },

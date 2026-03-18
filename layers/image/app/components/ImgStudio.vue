@@ -1196,11 +1196,6 @@ defineExpose({
           interacting: isDragging,
           panning: !disablePanning,
         })"
-        :style="(!fixedStencil && hasBoard) ? {
-          backgroundImage: 'linear-gradient(45deg, #151515 25%, transparent 25%), linear-gradient(-45deg, #151515 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #151515 75%), linear-gradient(-45deg, transparent 75%, #151515 75%)',
-          backgroundSize: '20px 20px',
-          backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
-        } : {}"
         @mousedown="onDragStart"
         @touchstart="onDragStart">
         <!-- Fixed Stencil Overlay (Target for Stencils that stay static in center) -->
@@ -1252,7 +1247,7 @@ defineExpose({
           }">
           <canvas
             ref="canvasRef"
-            :class="[{ hidden: resolvedMode === 'image' }, resUI.canvas()]"
+            :class="resUI.canvas({ hidden: resolvedMode === 'image' })"
             :style="canvasPreviewStyle" />
           <img
             v-if="resolvedMode === 'image'"
