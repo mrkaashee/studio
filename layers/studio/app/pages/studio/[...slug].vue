@@ -1,24 +1,44 @@
 <script setup lang="ts">
+import { kebabCase } from 'scule'
+import type { ContentNavigationItem } from '@nuxt/content'
+
 const route = useRoute()
-const { data: page } = await useAsyncData(route.path, () => {
-  return queryCollection('content').path(route.path).first()
-})
+
+const { data: page } = await useAsyncData(kebabCase(route.path), () => queryCollection('content').path(route.path).first())
+if (!page.value) {
+  throw createError({ statusCode: 404, statusMessage: 'Page not found', fatal: true })
+}
 </script>
 
 <template>
-  <UDashboardPanel grow>
-    <template #body>
-      <ContentRenderer v-if="page" :value="page" />
-      <div v-else class="flex flex-col items-center justify-center h-full space-y-4">
-        <UIcon name="i-lucide-file-warning" class="w-12 h-12 text-muted" />
-        <h2 class="text-xl font-semibold text-highlighted">
-          Page Not Found
-        </h2>
-        <p class="text-muted text-sm">
-          The requested path <code>{{ route.path }}</code> does not exist.
-        </p>
-        <UButton label="Go to Image Studio" to="/studio/image" color="primary" variant="soft" />
-      </div>
-    </template>
-  </UDashboardPanel>
+  <UPage v-if="page">
+    <UPageHeader :title="page.title">
+      <!-- <template #headline>
+        <UBreadcrumb :items="breadcrumb" />
+      </template>
+
+      <template #description>
+        <MDC v-if="page.description" :value="page.description" unwrap="p" :cache-key="`${kebabCase(route.path)}-description`" />
+      </template>
+
+      <template #links>
+        <UButton
+          v-for="link in page.links"
+          :key="link.label"
+          color="neutral"
+          variant="outline"
+          :target="link.to?.startsWith('http') ? '_blank' : undefined"
+          v-bind="link"
+        >
+          <template v-if="link.avatar" #leading>
+            <UAvatar v-bind="link.avatar" size="2xs" :alt="`${link.label} avatar`" />
+          </template>
+        </UButton>
+        <PageHeaderLinks />
+      </template> -->
+    </UPageHeader>
+    <UPageBody>
+      <ContentRenderer :value="page" />
+    </UPageBody>
+  </UPage>
 </template>

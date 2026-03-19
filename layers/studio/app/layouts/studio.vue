@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import type { ContentNavigationItem } from '@nuxt/content'
+
+const route = useRoute()
+
 const links = [
   {
     label: 'Image',
@@ -27,10 +31,20 @@ const links = [
     ]
   }
 ]
+
+const { data: navigation } = await useAsyncData('navigation', () => queryCollectionNavigation('content'))
+console.log('navigation', navigation.value)
+
+const rootNavigation = computed(() =>
+  navigation.value
+    ?.find(ni => ni.path.startsWith('/studio'))
+    ?.children?.filter(ni => ni.path != '/studio')
+)
+console.log('rootNavigation', rootNavigation.value)
 </script>
 
 <template>
-  <UDashboardGroup>
+  <!-- <UDashboardGroup>
     <UDashboardSidebar resizable>
       <template #header>
         <div class="px-3 py-2">
@@ -42,5 +56,23 @@ const links = [
       <UNavigationMenu :items="links" orientation="vertical" />
     </UDashboardSidebar>
     <slot />
-  </UDashboardGroup>
+  </UDashboardGroup> -->
+  <UMain>
+    <UHeader title="Tools" />
+    <UContainer>
+      <UPage>
+        <template #left>
+          <UPageAside>
+            <UContentNavigation
+              :key="route.path"
+              :collapsible="false"
+              :navigation="rootNavigation"
+              highlight
+              :ui="{ linkTrailingBadge: 'font-semibold uppercase' }" />
+          </UPageAside>
+        </template>
+        <slot />
+      </UPage>
+    </UContainer>
+  </UMain>
 </template>
