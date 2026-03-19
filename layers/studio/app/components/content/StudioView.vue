@@ -98,7 +98,7 @@ const resolvedProps = computed(() => {
     }
   }
 
-  return { ...base, ...(toolConfigs[props.name || ''] || {}) }
+  return { ...(toolConfigs[props.name || ''] || {}), ...base }
 })
 </script>
 
