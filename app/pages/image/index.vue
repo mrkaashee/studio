@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref } from 'vue'
-import type { AspectPreset } from '~/components/img/types'
+import type { AspectPreset, CropResult } from '~/components/img/types'
 import ImgStudio from '~/components/img/ImgStudio.vue'
 
 const activeTool2 = ref<'crop' | 'none'>('crop')
@@ -19,6 +19,10 @@ const presets: AspectPreset[] = [
   { label: 'Portrait (9:16)', value: 9 / 16 },
   { label: 'Photo (4:3)', value: 4 / 3 }
 ]
+
+function onCropApply(res: CropResult) {
+  console.log('Crop applied', res.dataUrl.substring(0, 30) + '...')
+}
 
 function onCropCancel() {
   console.log('Crop cancelled')
