@@ -1328,7 +1328,7 @@ defineExpose({
                 :disabled="!canRedo"
                 @click="redo" />
             </UTooltip>
-            <div class="w-px h-4 bg-inverted/20 mx-1" />
+            <USeparator orientation="vertical" class="h-6" />
             <UTooltip text="Reset All">
               <UButton
                 icon="i-lucide-rotate-ccw"

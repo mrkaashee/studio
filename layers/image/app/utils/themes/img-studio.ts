@@ -7,7 +7,7 @@ export default {
     canvasWrapper: 'will-change-transform shrink-0',
     canvas: 'block w-full h-full shadow-2xl bg-default',
     image: 'block w-full h-full shadow-2xl bg-default object-cover pointer-events-none',
-    floatingBar: 'absolute z-40 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-inverted/80 backdrop-blur-md border border-default/20 shadow-xl',
+    floatingBar: 'absolute z-40 left-1/2 -translate-x-1/2 flex items-center gap-1 px-2 py-1.5 rounded-xl bg-accented backdrop-blur-md border border-default/20 shadow-xl',
     aside: 'bg-elevated/80 backdrop-blur-md flex flex-col z-10 transition-all duration-300 ease-in-out',
     asideContent: 'flex-1 overflow-y-auto p-6 flex flex-col gap-6 scrollbar-thin scrollbar-thumb-accented scrollbar-track-transparent',
     uploader: 'flex flex-col items-center justify-center w-full h-full min-h-64 bg-inverted rounded-xl border border-inverted/5 p-8',
