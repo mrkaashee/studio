@@ -1,7 +1,37 @@
 <script lang="ts" setup>
-import { ref } from 'vue'
-import type { AspectPreset, CropResult, StudioTool } from '~/components/img/types'
+import { ref, computed } from 'vue'
+import type { AspectPreset, CropResult, StudioTool, CropConfig } from '~/components/img/types'
 import ImgStudio from '~/components/img/ImgStudio.vue'
+
+// 0. Playground State
+const playgroundSrc = ref('https://picsum.photos/id/10/800/600')
+const playgroundActiveTool = ref<StudioTool>('crop')
+const playgroundCropEnabled = ref(true)
+const playgroundCropShape = ref<'rect' | 'round'>('rect')
+const playgroundCropFixed = ref(false)
+const playgroundCropAspect = ref<string | number | null>(null)
+const playgroundZoomEnabled = ref(true)
+const playgroundToolbarShow = ref(true)
+
+const aspectOptions = [
+  { label: 'Free (null)', value: null },
+  { label: 'Square (1:1)', value: 1 },
+  { label: 'Video (16:9)', value: 16 / 9 },
+  { label: 'Portrait (9:16)', value: 9 / 16 },
+  { label: 'Tailwind (aspect-video)', value: 'aspect-video' },
+  { label: 'String (3/2)', value: '3/2' }
+]
+
+const playgroundCropConfig = computed<CropConfig | undefined>(() =>
+  playgroundCropEnabled.value
+    ? {
+        shape: playgroundCropShape.value,
+        fixed: playgroundCropFixed.value,
+        aspect: playgroundCropAspect.value,
+        presets: presets
+      }
+    : undefined
+)
 
 const activeTool2 = ref<StudioTool>('crop')
 const activeTool3 = ref<StudioTool>('crop')
@@ -63,7 +93,44 @@ function onReset() {
           Testing the fresh ImgStudio component root with props, emits, and slots.
         </p>
       </div>
+      <!-- 0. Interactive Playground -->
+      <UCard :ui="{ body: 'space-y-4' }">
+        <h2 class="text-xl font-semibold flex items-center gap-2">
+          <UIcon name="i-lucide-flask-conical" class="w-6 h-6 text-primary" />
+          0. Interactive Playground
+        </h2>
 
+        <UCard :ui="{ body: 'grid grid-cols-2 md:grid-cols-4 gap-4 mb-4' }">
+          <UFormGroup label="Enable Cropper">
+            <UCheckbox v-model="playgroundCropEnabled" label="Crop Tool" />
+          </UFormGroup>
+          <UFormGroup label="Shape">
+            <USelect v-model="playgroundCropShape" :items="['rect', 'round']" />
+          </UFormGroup>
+          <UFormGroup label="Fixed Cropper">
+            <UCheckbox v-model="playgroundCropFixed" label="Fixed Mode" />
+          </UFormGroup>
+          <UFormGroup label="Aspect Ratio">
+            <USelect v-model="playgroundCropAspect" :items="aspectOptions" value-key="value" />
+          </UFormGroup>
+          <UFormGroup label="Enable Zoom">
+            <UCheckbox v-model="playgroundZoomEnabled" label="Zoom Config" />
+          </UFormGroup>
+          <UFormGroup label="Show Toolbar">
+            <UCheckbox v-model="playgroundToolbarShow" label="Sidebar" />
+          </UFormGroup>
+        </UCard>
+
+        <ImgStudio
+          v-model:src="playgroundSrc"
+          v-model:active-tool="playgroundActiveTool"
+          :crop="playgroundCropConfig"
+          :zoom="playgroundZoomEnabled ? { step: 0.1, max: 5 } : false"
+          :toolbar="{ show: playgroundToolbarShow, items: ['crop', 'reset'] }"
+          @crop:apply="onCropApply"
+          @crop:cancel="onCropCancel"
+          @reset="onReset" />
+      </UCard>
       <div class="grid grid-cols-1 xl:grid-cols-2 gap-8">
         <!-- 1. Standard Instance -->
         <div class="space-y-4">
