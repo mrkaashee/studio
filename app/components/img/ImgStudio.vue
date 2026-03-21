@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, watch, computed } from 'vue'
-import type { CropConfig, CropResult, StudioTool, ToolbarConfig } from './types'
+import type { CropConfig, CropResult, StudioTool, ToolbarConfig, ZoomConfig } from './types'
 import ImgDropZone from './ImgDropZone.vue'
 import ImgToolbar from './ImgToolbar.vue'
 import ImgCropper from './ImgCropper.vue'
@@ -9,12 +9,14 @@ const props = withDefaults(defineProps<{
   src?: string
   accept?: string
   crop?: boolean | CropConfig
+  zoom?: boolean | ZoomConfig
   toolbar?: boolean | ToolbarConfig
   disabled?: boolean
 }>(), {
   src: '',
   accept: 'image/*',
   crop: true,
+  zoom: false,
   toolbar: true,
   disabled: false
 })
@@ -38,6 +40,12 @@ watch(() => props.src, val => {
 const normalizedCrop = computed<CropConfig>(() => {
   if (typeof props.crop === 'boolean') return {}
   return props.crop || {}
+})
+
+const normalizedZoom = computed<ZoomConfig | false>(() => {
+  if (props.zoom === false) return false
+  if (props.zoom === true) return {}
+  return props.zoom || {}
 })
 
 const isCropEnabled = computed(() => !!props.crop)
@@ -167,6 +175,7 @@ defineExpose({
               ref="cropperRef"
               :src="internalSrc"
               :crop="normalizedCrop"
+              :zoom="normalizedZoom"
               :hide-actions="hideActions"
               @apply="onCropApply"
               @cancel="onCropCancel" />

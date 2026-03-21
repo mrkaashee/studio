@@ -73,6 +73,7 @@ function onReset() {
           <ImgStudio
             v-model:src="src1"
             :crop="{ presets }"
+            :zoom="{ step: 0.1, max: 5 }"
             :toolbar="{ show: true, items: ['crop'] }"
             @crop:apply="onCropApply"
             @crop:cancel="onCropCancel"

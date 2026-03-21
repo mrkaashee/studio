@@ -30,6 +30,15 @@ export interface CropConfig {
   size?: number
 }
 
+export interface ZoomConfig {
+  /** Min zoom scale. Default is auto (fits crop) */
+  min?: number
+  /** Max zoom scale. Default is 10 */
+  max?: number
+  /** Sensitivity of mouse wheel. Default is 0.05 */
+  step?: number
+}
+
 export interface ResizeConfig {
   width?: number
   height?: number

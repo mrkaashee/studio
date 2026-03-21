@@ -1,10 +1,11 @@
 <script lang="ts" setup>
 import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
-import type { CropResult, CropConfig } from './types'
+import type { CropResult, CropConfig, ZoomConfig } from './types'
 
 const props = defineProps<{
   src: string
   crop?: CropConfig
+  zoom?: ZoomConfig | false
   hideActions?: boolean
 }>()
 
@@ -18,6 +19,7 @@ const config = computed(() => ({
   presets: props.crop?.presets ?? [],
   shape: props.crop?.shape ?? 'rect',
   fixed: props.crop?.fixed ?? false,
+  zoom: props.zoom ?? false,
   size: props.crop?.size
 }))
 
@@ -508,11 +510,12 @@ function onPointerUp(_e: MouseEvent | TouchEvent) {
 }
 
 function onWheel(e: WheelEvent) {
-  if (!config.value.fixed || !imgRef.value) return
+  if (config.value.zoom === false || !imgRef.value) return
   e.preventDefault()
 
-  const zoomSpeed = 0.05
-  const delta = e.deltaY > 0 ? -zoomSpeed : zoomSpeed // positive is zoom in
+  const zc = typeof config.value.zoom === 'object' ? config.value.zoom : {}
+  const zoomStep = zc.step ?? 0.05
+  const delta = e.deltaY > 0 ? -zoomStep : zoomStep
 
   const oldScale = imgState.scale
   let newScale = oldScale + oldScale * delta
@@ -520,10 +523,11 @@ function onWheel(e: WheelEvent) {
   // Constrain zoom out so image covers the crop box
   const minScaleX = cropState.w / imgRef.value.naturalWidth
   const minScaleY = cropState.h / imgRef.value.naturalHeight
-  const minScale = Math.max(minScaleX, minScaleY)
+  const minScale = Math.max(minScaleX, minScaleY, zc.min ?? 0)
+  const maxScale = zc.max ?? (minScale * 10)
 
   if (newScale < minScale) newScale = minScale
-  if (newScale > minScale * 10) newScale = minScale * 10
+  if (newScale > maxScale) newScale = maxScale
 
   // Focus zoom on the mouse pointer position or center
   let focusX = cropState.x + cropState.w / 2
