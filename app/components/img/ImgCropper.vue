@@ -209,31 +209,33 @@ function draw() {
   }
 
   // 5. Draw handles
-  const hs = HANDLE_SIZE
-  const hs2 = hs / 2
-  ctx.fillStyle = '#fff'
+  if (!props.fixedCrop) {
+    const hs = HANDLE_SIZE
+    const hs2 = hs / 2
+    ctx.fillStyle = '#fff'
 
-  if (props.cropShape === 'round') {
-    const cx = cropState.x + cropState.w / 2
-    const cy = cropState.y + cropState.h / 2
-    const R = cropState.w / 2
-    // Place handle at top-right of the circle curve (45 degrees)
-    const hx = cx + R * 0.7071
-    const hy = cy - R * 0.7071
+    if (props.cropShape === 'round') {
+      const cx = cropState.x + cropState.w / 2
+      const cy = cropState.y + cropState.h / 2
+      const R = cropState.w / 2
+      // Place handle at top-right of the circle curve (45 degrees)
+      const hx = cx + R * 0.7071
+      const hy = cy - R * 0.7071
 
-    ctx.beginPath()
-    ctx.arc(hx, hy, hs2 + 1, 0, Math.PI * 2) // slightly larger handle for circle
-    ctx.fill()
-  }
-  else {
-    // Corner paths
-    const rects: [number, number, number, number][] = [
-      [cropState.x - hs2, cropState.y - hs2, hs, hs], // tl
-      [cropState.x + cropState.w - hs2, cropState.y - hs2, hs, hs], // tr
-      [cropState.x - hs2, cropState.y + cropState.h - hs2, hs, hs], // bl
-      [cropState.x + cropState.w - hs2, cropState.y + cropState.h - hs2, hs, hs] // br
-    ]
-    rects.forEach(([rx, ry, rw, rh]) => ctx!.fillRect(rx, ry, rw, rh))
+      ctx.beginPath()
+      ctx.arc(hx, hy, hs2 + 1, 0, Math.PI * 2) // slightly larger handle for circle
+      ctx.fill()
+    }
+    else {
+      // Corner paths
+      const rects: [number, number, number, number][] = [
+        [cropState.x - hs2, cropState.y - hs2, hs, hs], // tl
+        [cropState.x + cropState.w - hs2, cropState.y - hs2, hs, hs], // tr
+        [cropState.x - hs2, cropState.y + cropState.h - hs2, hs, hs], // bl
+        [cropState.x + cropState.w - hs2, cropState.y + cropState.h - hs2, hs, hs] // br
+      ]
+      rects.forEach(([rx, ry, rw, rh]) => ctx!.fillRect(rx, ry, rw, rh))
+    }
   }
 }
 
