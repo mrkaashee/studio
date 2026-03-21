@@ -1,33 +1,32 @@
 <script lang="ts" setup>
-import { ref, onMounted, onUnmounted, watch } from 'vue'
-import type { CropResult, AspectPreset } from './types'
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue'
+import type { CropResult, CropConfig } from './types'
 
-const props = withDefaults(defineProps<{
+const props = defineProps<{
   src: string
-  cropAspect?: number | null
-  cropPresets?: AspectPreset[]
-  cropShape?: 'rect' | 'round'
-  fixedCrop?: boolean
-  hideActions?: boolean
-  cropSize?: number
-}>(), {
-  cropAspect: null,
-  cropPresets: () => [],
-  cropShape: 'rect',
-  fixedCrop: false,
-  hideActions: false
-})
+  crop?: CropConfig
+}>()
 
 const emit = defineEmits<{
   apply: [result: CropResult]
   cancel: []
 }>()
 
-const activeAspect = ref<number | null>(props.cropShape === 'round' ? 1 : props.cropAspect)
+const config = computed(() => ({
+  enabled: props.crop?.enabled ?? true,
+  aspect: props.crop?.aspect ?? null,
+  presets: props.crop?.presets ?? [],
+  shape: props.crop?.shape ?? 'rect',
+  fixed: props.crop?.fixed ?? false,
+  size: props.crop?.size,
+  hideActions: props.crop?.hideActions ?? false
+}))
+
+const activeAspect = ref<number | null>(config.value.shape === 'round' ? 1 : config.value.aspect)
 
 // Apply aspect from presets if prop changes
-watch(() => props.cropAspect, val => {
-  if (props.cropShape === 'round') return // always 1:1 for round
+watch(() => config.value.aspect, val => {
+  if (config.value.shape === 'round') return // always 1:1 for round
   activeAspect.value = val
   applyAspect()
 })
@@ -90,7 +89,7 @@ function initLayout() {
   canvasRef.value.style.height = height + 'px'
 
   // Fit image into container
-  const isFixed = props.fixedCrop
+  const isFixed = config.value.fixed
   const padding = isFixed ? 0 : 20
 
   const imgW = imgRef.value.naturalWidth
@@ -103,7 +102,7 @@ function initLayout() {
     const diameter = Math.min(width, height) - padding * 2
     cw = diameter
     ch = diameter
-    
+
     // Scale image so minimum side covers the diameter perfectly
     scale = Math.max(diameter / imgW, diameter / imgH)
   }
@@ -168,35 +167,76 @@ function setAspect(val: number | null) {
 // --- Rendering ---
 function draw() {
   if (!ctx || !canvasRef.value || !imgRef.value) return
-  const w = canvasRef.value.width / (window.devicePixelRatio || 1)
-  const h = canvasRef.value.height / (window.devicePixelRatio || 1)
+  const dpr = window.devicePixelRatio || 1
+  const w = canvasRef.value.width / dpr
+  const h = canvasRef.value.height / dpr
 
   ctx.clearRect(0, 0, w, h)
 
-  // 1. Draw image
-  ctx.drawImage(imgRef.value, imgState.x, imgState.y, imgState.w, imgState.h)
+  if (config.value.fixed) {
+    // 1. Draw image ONLY inside crop area (Clpping)
+    ctx.save()
 
-  // 2. Overlay dark mask
-  ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
-  ctx.fillRect(0, 0, w, h)
+    // Create the crop path
+    if (config.value.shape === 'round') {
+      ctx.beginPath()
+      ctx.arc(cropState.x + cropState.w / 2, cropState.y + cropState.h / 2, cropState.w / 2, 0, Math.PI * 2)
+      ctx.clip()
+    }
+    else {
+      ctx.beginPath()
+      ctx.rect(cropState.x, cropState.y, cropState.w, cropState.h)
+      ctx.clip()
+    }
 
-  // 3. Cut out crop area
-  ctx.save()
-  ctx.globalCompositeOperation = 'destination-out'
-  if (props.cropShape === 'round') {
-    ctx.beginPath()
-    ctx.arc(cropState.x + cropState.w / 2, cropState.y + cropState.h / 2, cropState.w / 2, 0, Math.PI * 2)
-    ctx.fill()
+    // Draw image behind the clip
+    ctx.drawImage(imgRef.value, imgState.x, imgState.y, imgState.w, imgState.h)
+    ctx.restore()
+
+    // 2. Optional: Draw a subtle mask outside the crop area (inverted clip)
+    ctx.save()
+    if (config.value.shape === 'round') {
+      ctx.beginPath()
+      ctx.rect(0, 0, w, h)
+      ctx.arc(cropState.x + cropState.w / 2, cropState.y + cropState.h / 2, cropState.w / 2, 0, Math.PI * 2, true)
+      ctx.clip()
+    }
+    else {
+      ctx.beginPath()
+      ctx.rect(0, 0, w, h)
+      ctx.rect(cropState.x + cropState.w, cropState.y, -cropState.w, cropState.h) // anticlockwise rect
+      ctx.clip()
+    }
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.4)'
+    ctx.fillRect(0, 0, w, h)
+    ctx.restore()
   }
   else {
-    ctx.fillRect(cropState.x, cropState.y, cropState.w, cropState.h)
+    // Normal: Draw image everywhere + dark mask with cutout (hole)
+    // 1. Draw image
+    ctx.drawImage(imgRef.value, imgState.x, imgState.y, imgState.w, imgState.h)
+
+    // 2. Overlay dark mask with hole
+    ctx.save()
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'
+    ctx.beginPath()
+    ctx.rect(0, 0, w, h) // outer boundary
+    if (config.value.shape === 'round') {
+      // Create a hole by drawing in opposite direction
+      ctx.arc(cropState.x + cropState.w / 2, cropState.y + cropState.h / 2, cropState.w / 2, 0, Math.PI * 2, true)
+    }
+    else {
+      // Create a hole by drawing a rect in opposite direction
+      ctx.rect(cropState.x + cropState.w, cropState.y, -cropState.w, cropState.h)
+    }
+    ctx.fill()
+    ctx.restore()
   }
-  ctx.restore()
 
   // 4. Draw crop border
   ctx.strokeStyle = '#fff'
   ctx.lineWidth = 1
-  if (props.cropShape === 'round') {
+  if (config.value.shape === 'round') {
     ctx.beginPath()
     ctx.arc(cropState.x + cropState.w / 2, cropState.y + cropState.h / 2, cropState.w / 2, 0, Math.PI * 2)
     ctx.stroke()
@@ -206,7 +246,7 @@ function draw() {
   }
 
   // Grid lines 3x3 only for rect
-  if (props.cropShape !== 'round') {
+  if (config.value.shape !== 'round') {
     ctx.beginPath()
     for (let i = 1; i < 3; i++) {
       // Vertical
@@ -221,12 +261,12 @@ function draw() {
   }
 
   // 5. Draw handles
-  if (!props.fixedCrop) {
+  if (!config.value.fixed) {
     const hs = HANDLE_SIZE
     const hs2 = hs / 2
     ctx.fillStyle = '#fff'
 
-    if (props.cropShape === 'round') {
+    if (config.value.shape === 'round') {
       const cx = cropState.x + cropState.w / 2
       const cy = cropState.y + cropState.h / 2
       const R = cropState.w / 2
@@ -264,11 +304,11 @@ function getMousePos(e: MouseEvent | TouchEvent) {
 }
 
 function getHitAction(x: number, y: number) {
-  if (props.fixedCrop) return 'pan'
+  if (config.value.fixed) return 'pan'
 
   const hs2 = HANDLE_SIZE / 2 + 6 // +6px slop for easier grabbing
 
-  if (props.cropShape === 'round') {
+  if (config.value.shape === 'round') {
     const cx = cropState.x + cropState.w / 2
     const cy = cropState.y + cropState.h / 2
     const R = cropState.w / 2
@@ -297,7 +337,7 @@ function getHitAction(x: number, y: number) {
 
 function onHoverMove(e: MouseEvent | TouchEvent) {
   if (isDragging) return
-  if (props.fixedCrop) {
+  if (config.value.fixed) {
     hoverCursor.value = 'move'
     return
   }
@@ -466,7 +506,7 @@ function onPointerMove(e: MouseEvent | TouchEvent) {
   draw()
 }
 
-function onPointerUp(e: MouseEvent | TouchEvent) {
+function onPointerUp(_e: MouseEvent | TouchEvent) {
   isDragging = false
   if (typeof window !== 'undefined') {
     window.removeEventListener('mousemove', onPointerMove)
@@ -477,7 +517,7 @@ function onPointerUp(e: MouseEvent | TouchEvent) {
 }
 
 function onWheel(e: WheelEvent) {
-  if (!props.fixedCrop || !imgRef.value) return
+  if (!config.value.fixed || !imgRef.value) return
   e.preventDefault()
 
   const zoomSpeed = 0.05
@@ -530,15 +570,15 @@ function apply() {
   const pw = cropState.w / imgState.scale
   const ph = cropState.h / imgState.scale
 
-  const outW = props.cropSize || pw
-  const outH = props.cropSize || ph
+  const outW = config.value.size || pw
+  const outH = config.value.size || ph
 
   const c = document.createElement('canvas')
   c.width = outW
   c.height = outH
   const outCtx = c.getContext('2d')!
 
-  if (props.cropShape === 'round') {
+  if (config.value.shape === 'round') {
     outCtx.beginPath()
     outCtx.arc(outW / 2, outH / 2, outW / 2, 0, Math.PI * 2)
     outCtx.clip()
@@ -567,11 +607,11 @@ defineExpose({
 </script>
 
 <template>
-  <div class="img-cropper">
+  <div v-if="config.enabled" class="img-cropper">
     <!-- Optional Presets Header -->
-    <div v-if="cropPresets.length > 0" class="cropper-presets">
+    <div v-if="config.presets.length > 0" class="cropper-presets">
       <UButton
-        v-for="preset in cropPresets"
+        v-for="preset in config.presets"
         :key="preset.label"
         :label="preset.label"
         :variant="activeAspect === preset.value ? 'solid' : 'soft'"
@@ -593,10 +633,10 @@ defineExpose({
     </div>
 
     <!-- Action Footer -->
-    <div v-if="!hideActions" class="cropper-actions">
+    <div v-if="!config.hideActions" class="cropper-actions">
       <UButton label="Cancel" color="neutral" variant="soft" icon="i-lucide-x" @click="cancel" />
       <div class="flex-1 text-center text-sm text-gray-500 font-medium">
-        {{ cropShape === 'round' ? 'Circular Crop' : 'Rectangular Crop' }}
+        {{ config.shape === 'round' ? 'Circular Crop' : 'Rectangular Crop' }}
       </div>
       <UButton label="Apply Crop" color="primary" variant="solid" icon="i-lucide-check" @click="apply" />
     </div>

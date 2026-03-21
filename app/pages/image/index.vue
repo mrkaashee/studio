@@ -72,8 +72,7 @@ function onReset() {
           </h2>
           <ImgStudio
             v-model:src="src1"
-            :crop="true"
-            :crop-presets="presets"
+            :crop="{ presets }"
             @crop:apply="onCropApply"
             @crop:cancel="onCropCancel"
             @reset="onReset">
@@ -103,8 +102,7 @@ function onReset() {
           <ImgStudio
             v-model:src="src2"
             v-model:active-tool="activeTool2"
-            :crop="true"
-            :crop-aspect="16/9"
+            :crop="{ aspect: 16 / 9 }"
             @crop:apply="onCropApply"
             @crop:cancel="onCropCancel"
             @reset="onReset">
@@ -127,8 +125,7 @@ function onReset() {
           <ImgStudio
             v-model:src="src3"
             v-model:active-tool="activeTool3"
-            :crop="true"
-            crop-shape="round"
+            :crop="{ shape: 'round' }"
             @crop:apply="onCropApply"
             @crop:cancel="onCropCancel"
             @reset="onReset">
@@ -151,9 +148,7 @@ function onReset() {
           <ImgStudio
             v-model:src="src4"
             v-model:active-tool="activeTool4"
-            :crop="true"
-            crop-shape="round"
-            fixed-crop
+            :crop="{ shape: 'round', fixed: true }"
             @crop:apply="onCropApply"
             @crop:cancel="onCropCancel"
             @reset="onReset">
@@ -175,10 +170,7 @@ function onReset() {
           <ImgStudio
             v-model:src="src6"
             v-model:active-tool="activeTool6"
-            :crop="true"
-            :crop-aspect="1"
-            crop-shape="rect"
-            fixed-crop
+            :crop="{ aspect: 1, shape: 'rect', fixed: true }"
             @crop:apply="onCropApply"
             @crop:cancel="onCropCancel"
             @reset="onReset" />
@@ -209,12 +201,8 @@ function onReset() {
                   v-model:src="tempAvatarSrc"
                   v-model:active-tool="activeTool5"
                   class="h-auto! min-h-0! aspect-square w-full"
-                  :crop="true"
-                  crop-shape="round"
-                  fixed-crop
+                  :crop="{ shape: 'round', fixed: true, hideActions: true, size: 512 }"
                   hide-toolbar
-                  hide-actions
-                  :crop-size="512"
                   @crop:apply="onAvatarCropApply"
                   @crop:cancel="isAvatarModalOpen = false"
                   @reset="onReset" />

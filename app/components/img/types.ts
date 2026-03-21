@@ -17,5 +17,15 @@ export interface AspectPreset {
   value: number | null
 }
 
+export interface CropConfig {
+  enabled?: boolean
+  aspect?: number | null
+  presets?: AspectPreset[]
+  shape?: 'rect' | 'round'
+  fixed?: boolean
+  size?: number
+  hideActions?: boolean
+}
+
 export type StudioTool = 'crop' | 'none'
 export type CropShape = 'rect' | 'round'

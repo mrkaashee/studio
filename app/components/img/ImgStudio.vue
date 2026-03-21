@@ -1,6 +1,6 @@
 <script lang="ts" setup>
-import { ref, watch } from 'vue'
-import type { AspectPreset, CropResult, StudioTool } from './types'
+import { ref, watch, computed } from 'vue'
+import type { CropConfig, CropResult, StudioTool } from './types'
 import ImgDropZone from './ImgDropZone.vue'
 import ImgToolbar from './ImgToolbar.vue'
 import ImgCropper from './ImgCropper.vue'
@@ -8,25 +8,15 @@ import ImgCropper from './ImgCropper.vue'
 const props = withDefaults(defineProps<{
   src?: string
   accept?: string
-  crop?: boolean
-  cropAspect?: number | null
-  cropPresets?: AspectPreset[]
-  cropShape?: 'rect' | 'round'
-  fixedCrop?: boolean
+  crop?: boolean | CropConfig
   hideToolbar?: boolean
-  hideActions?: boolean
-  cropSize?: number
   disabled?: boolean
 }>(), {
   src: '',
   accept: 'image/*',
   crop: true,
-  cropAspect: null,
-  cropPresets: () => [],
-  cropShape: 'rect',
-  fixedCrop: false,
   hideToolbar: false,
-  hideActions: false
+  disabled: false
 })
 
 const emit = defineEmits<{
@@ -39,20 +29,27 @@ const emit = defineEmits<{
 // --- State ---
 const internalSrc = ref(props.src)
 const activeTool = defineModel<StudioTool>('activeTool', { default: 'none' })
-const isCropping = ref(activeTool.value === 'crop')
 
-// Sync external src to internal
+// Update internal src if prop changes
 watch(() => props.src, val => {
-  internalSrc.value = val
+  if (val) internalSrc.value = val
 })
+
+const normalizedCrop = computed<CropConfig>(() => {
+  if (typeof props.crop === 'boolean') {
+    return { enabled: props.crop }
+  }
+  return { enabled: true, ...props.crop }
+})
+
+const isCropping = computed(() => activeTool.value === 'crop' && normalizedCrop.value.enabled)
 
 // Sync crop tool activation state
 watch(activeTool, tool => {
-  if (tool === 'crop' && !props.crop) {
+  if (tool === 'crop' && !normalizedCrop.value.enabled) {
     activeTool.value = 'none'
     return
   }
-  isCropping.value = tool === 'crop'
 })
 
 // --- Handlers ---
@@ -97,19 +94,16 @@ defineExpose({
 
 <template>
   <div class="img-studio" :class="{ 'is-disabled': disabled }">
-    <!-- Empty State -->
-    <template v-if="!internalSrc">
-      <ImgDropZone
-        :accept="accept"
-        :disabled="disabled"
-        @load="onImageLoad">
+    <!-- 1. Selection State -->
+    <div v-if="!internalSrc" class="studio-empty">
+      <ImgDropZone :accept="accept" @load="onImageLoad">
         <template #default>
           <slot name="empty" />
         </template>
       </ImgDropZone>
-    </template>
+    </div>
 
-    <!-- Studio Layout -->
+    <!-- 2. Editor State -->
     <template v-else>
       <div class="studio-layout">
         <!-- Sidebar -->
@@ -120,7 +114,7 @@ defineExpose({
           <slot name="toolbar" />
         </ImgToolbar>
 
-        <!-- Main Display / Cropper -->
+        <!-- Main Viewport -->
         <div class="studio-main">
           <!-- Background checked pattern -->
           <div class="bg-pattern" />
@@ -131,12 +125,7 @@ defineExpose({
               v-if="isCropping"
               ref="cropperRef"
               :src="internalSrc"
-              :crop-aspect="cropAspect"
-              :crop-presets="cropPresets"
-              :crop-shape="cropShape"
-              :fixed-crop="fixedCrop"
-              :hide-actions="hideActions"
-              :crop-size="cropSize"
+              :crop="normalizedCrop"
               @apply="onCropApply"
               @cancel="onCropCancel" />
 
@@ -151,7 +140,7 @@ defineExpose({
       </div>
 
       <!-- Action Footer -->
-      <div v-if="!hideActions" class="studio-footer">
+      <div v-if="!normalizedCrop.hideActions" class="studio-footer">
         <UButton
           label="Reset Image"
           icon="i-lucide-trash-2"
