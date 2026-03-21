@@ -22,7 +22,7 @@ const aspectOptions = [
   { label: 'String (3/2)', value: '3/2' }
 ]
 
-const playgroundCropConfig = computed<CropConfig | undefined>(() =>
+const playgroundCropConfig = computed<CropConfig | boolean>(() =>
   playgroundCropEnabled.value
     ? {
         shape: playgroundCropShape.value,
@@ -30,7 +30,7 @@ const playgroundCropConfig = computed<CropConfig | undefined>(() =>
         aspect: playgroundCropAspect.value,
         presets: presets
       }
-    : undefined
+    : false
 )
 
 const activeTool2 = ref<StudioTool>('crop')

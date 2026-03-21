@@ -69,6 +69,11 @@ const normalizedToolbar = computed<ToolbarConfig>(() => {
 
 const isCropping = computed(() => activeTool.value === 'crop' && isCropEnabled.value)
 
+const cropperReady = ref(false)
+watch(isCropping, val => {
+  if (!val) cropperReady.value = false
+})
+
 const hideActions = computed(() => {
   const items = normalizedToolbar.value.items || []
   return items.includes('apply') || items.includes('cancel') || items.includes('reset')
@@ -169,24 +174,25 @@ defineExpose({
           <!-- Background checked pattern -->
           <div class="bg-pattern" />
 
-          <transition name="fade" mode="out-in">
-            <ImgCropper
-              v-if="isCropping"
-              ref="cropperRef"
-              :src="internalSrc"
-              :crop="normalizedCrop"
-              :zoom="normalizedZoom"
-              :hide-actions="hideActions"
-              @apply="onCropApply"
-              @cancel="onCropCancel" />
+          <ImgCropper
+            v-if="isCropping"
+            ref="cropperRef"
+            class="absolute inset-0 z-10"
+            :src="internalSrc"
+            :crop="normalizedCrop"
+            :zoom="normalizedZoom"
+            :hide-actions="hideActions"
+            @ready="cropperReady = true"
+            @apply="onCropApply"
+            @cancel="onCropCancel" />
 
-            <!-- Standard View -->
-            <div v-else class="studio-view">
-              <img :src="internalSrc" class="studio-img" alt="Studio Preview">
-              <!-- Custom preview overlay slot -->
-              <slot name="preview" :src="internalSrc" :crop="isCropping" />
-            </div>
-          </transition>
+          <!-- Standard View (Always rendered to prevent unmount flashes) -->
+          <div
+            class="studio-view"
+            :class="{ 'opacity-0 pointer-events-none': isCropping && cropperReady }">
+            <img :src="internalSrc" class="studio-img" alt="Studio Preview">
+            <slot name="preview" :src="internalSrc" :crop="isCropping" />
+          </div>
         </div>
       </div>
 

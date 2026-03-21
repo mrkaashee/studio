@@ -12,6 +12,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   apply: [result: CropResult]
   cancel: []
+  ready: []
 }>()
 
 const config = computed(() => ({
@@ -138,7 +139,7 @@ function initLayout() {
 
   // Fit image into container
   const isFixed = config.value.fixed
-  const padding = isFixed ? 0 : 20
+  const padding = isFixed ? 0 : 16
 
   const imgW = imgRef.value.naturalWidth
   const imgH = imgRef.value.naturalHeight
@@ -176,6 +177,7 @@ function initLayout() {
 
   applyAspect()
   draw()
+  emit('ready')
 }
 
 // --- Aspect Logic ---
@@ -664,12 +666,21 @@ defineExpose({
 }
 
 .cropper-presets {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 20;
   display: flex;
+  justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--ui-border);
-  background: var(--ui-bg-elevated);
   overflow-x: auto;
+  pointer-events: none;
+}
+
+.cropper-presets > * {
+  pointer-events: auto;
 }
 
 .canvas-wrapper {
