@@ -128,6 +128,9 @@ function initLayout() {
   if (!containerRef.value || !canvasRef.value || !imgRef.value) return
   if (imgRef.value.naturalWidth === 0 || imgRef.value.naturalHeight === 0) return
 
+  const oldWidth = parseFloat(canvasRef.value.style.width || '0')
+  const oldHeight = parseFloat(canvasRef.value.style.height || '0')
+
   const { width, height } = containerRef.value.getBoundingClientRect()
   if (width === 0 || height === 0) return // Wait for layout to settle (e.g. Vue transitions)
 
@@ -146,41 +149,73 @@ function initLayout() {
   const imgW = imgRef.value.naturalWidth
   const imgH = imgRef.value.naturalHeight
 
-  let cw, ch, scale
+  const maxWidth = width - padding * 2
+  const maxHeight = height - padding * 2
+  const baseScale = Math.min(maxWidth / imgW, maxHeight / imgH)
 
-  if (isFixed) {
-    // Circle touches sides exactly, bounded only by canvas padding
-    const diameter = Math.max(0, Math.min(width, height) - padding * 2)
-    cw = diameter
-    ch = diameter
+  const hasExisting = cropState.w > 0 && imgState.scale > 0 && oldWidth > 0 && oldHeight > 0
 
-    // Scale image to contain it within the workspace, allowing empty space
-    const maxWidth = width - padding * 2
-    const maxHeight = height - padding * 2
-    scale = Math.min(maxWidth / imgW, maxHeight / imgH)
+  if (!hasExisting) {
+    if (isFixed) {
+      const diameter = Math.max(0, Math.min(width, height) - padding * 2)
+      cropState.w = diameter
+      cropState.h = diameter
+    }
+    else {
+      cropState.w = (imgW * baseScale) * 0.8
+      cropState.h = (imgH * baseScale) * 0.8
+    }
+    cropState.x = (width - cropState.w) / 2
+    cropState.y = (height - cropState.h) / 2
+
+    imgState.scale = baseScale
+    imgState.w = imgW * baseScale
+    imgState.h = imgH * baseScale
+    imgState.x = (width - imgState.w) / 2
+    imgState.y = (height - imgState.h) / 2
+
+    applyAspect()
   }
   else {
-    // Normal: fit image into container
-    const maxWidth = width - padding * 2
-    const maxHeight = height - padding * 2
-    scale = Math.min(maxWidth / imgW, maxHeight / imgH)
-    cw = (imgW * scale) * 0.8
-    ch = (imgH * scale) * 0.8
+    // Preserve state across window resizes / phone rotations
+    const oldBaseScale = Math.min((oldWidth - padding * 2) / imgW, (oldHeight - padding * 2) / imgH)
+    const zoomRelative = imgState.scale / (oldBaseScale || 1)
+    const newScale = baseScale * zoomRelative
+
+    // Get physical center of what we were looking at
+    const imgCenterXRaw = (oldWidth / 2 - imgState.x) / imgState.scale
+    const imgCenterYRaw = (oldHeight / 2 - imgState.y) / imgState.scale
+
+    // Get physical boundaries of the crop box
+    const cropPx = (cropState.x - imgState.x) / imgState.scale
+    const cropPy = (cropState.y - imgState.y) / imgState.scale
+    const cropPw = cropState.w / imgState.scale
+    const cropPh = cropState.h / imgState.scale
+
+    imgState.scale = newScale
+    imgState.w = imgW * newScale
+    imgState.h = imgH * newScale
+    imgState.x = width / 2 - (imgCenterXRaw * newScale)
+    imgState.y = height / 2 - (imgCenterYRaw * newScale)
+
+    if (isFixed) {
+      const diameter = Math.max(0, Math.min(width, height) - padding * 2)
+      cropState.w = diameter
+      cropState.h = diameter
+      cropState.x = (width - diameter) / 2
+      cropState.y = (height - diameter) / 2
+    }
+    else {
+      cropState.w = cropPw * newScale
+      cropState.h = cropPh * newScale
+      cropState.x = imgState.x + (cropPx * newScale)
+      cropState.y = imgState.y + (cropPy * newScale)
+    }
+
+    clampCropBox()
+    clampImgToCrop()
   }
 
-  cropState.w = cw
-  cropState.h = ch
-  cropState.x = (width - cw) / 2
-  cropState.y = (height - ch) / 2
-
-  imgState.scale = scale
-  imgState.w = imgW * scale
-  imgState.h = imgH * scale
-  // Always center the image on the full canvas (not just inside crop box)
-  imgState.x = (width - imgState.w) / 2
-  imgState.y = (height - imgState.h) / 2
-
-  applyAspect()
   draw()
   emit('ready')
 }
