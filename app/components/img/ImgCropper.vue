@@ -478,18 +478,14 @@ function onPointerMove(e: MouseEvent | TouchEvent) {
   // Aspect ratio lock during drag
   if (activeAspect.value !== null && dragAction !== 'move' && dragAction !== 'tr_round') {
     const ratio = activeAspect.value
-    // Simplify locked pulling to primary delta (max of dx/dy length to preserve direction)
-    if (dragAction === 'br') {
-      dx = dy * ratio // lock to dy
+    // Use the dominant mouse movement axis to drive the opposite axis
+    if (Math.abs(dx) > Math.abs(dy) * ratio) {
+      if (dragAction === 'br' || dragAction === 'tl') dy = dx / ratio
+      else if (dragAction === 'tr' || dragAction === 'bl') dy = -dx / ratio
     }
-    else if (dragAction === 'tl') {
-      dx = dy * ratio
-    }
-    else if (dragAction === 'tr') {
-      dy = -dx / ratio
-    }
-    else if (dragAction === 'bl') {
-      dx = -dy * ratio
+    else {
+      if (dragAction === 'br' || dragAction === 'tl') dx = dy * ratio
+      else if (dragAction === 'tr' || dragAction === 'bl') dx = -dy * ratio
     }
   }
 
