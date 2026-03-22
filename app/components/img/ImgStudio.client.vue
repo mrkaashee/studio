@@ -164,8 +164,8 @@ function cancelCrop() {
   cropperRef.value?.cancel()
 }
 
-function downloadImage(filename = 'image', reqFormat?: string, reqQuality?: number) {
-  if (!internalSrc.value) return
+async function getFile(filename = 'image', reqFormat?: string, reqQuality?: number): Promise<File | null> {
+  if (!internalSrc.value) return null
 
   const targetFormat = reqFormat || props.export?.defaultFormat
   const targetQuality = reqQuality || props.export?.quality || 0.9
@@ -175,58 +175,61 @@ function downloadImage(filename = 'image', reqFormat?: string, reqQuality?: numb
     const parts = internalSrc.value.split(',')
     const header = parts[0] || ''
     const data = parts[1] || ''
-    if (!data) return
+    if (!data) return null
 
     const mime = header.match(/:(.*?);/)?.[1] ?? 'image/png'
     const bytes = atob(data)
     const buf = new Uint8Array(bytes.length)
     for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i)
-    const blob = new Blob([buf], { type: mime })
-    const url = URL.createObjectURL(blob)
 
-    const a = document.createElement('a')
-    a.href = url
     const ext = mime.split('/')[1] || 'png'
-    a.download = `${filename}.${ext}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-    return
+    return new File([buf], `${filename}.${ext}`, { type: mime })
   }
 
   // Convert via Canvas
-  const img = new Image()
-  img.onload = () => {
-    const c = document.createElement('canvas')
-    c.width = img.naturalWidth
-    c.height = img.naturalHeight
-    const ctx = c.getContext('2d')!
-    ctx.drawImage(img, 0, 0)
-    const dataUrl = c.toDataURL(targetFormat, targetQuality)
+  return new Promise(resolve => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      const c = document.createElement('canvas')
+      c.width = img.naturalWidth
+      c.height = img.naturalHeight
+      const ctx = c.getContext('2d')
+      if (!ctx) return resolve(null)
 
-    const parts = dataUrl.split(',')
-    const header = parts[0] || ''
-    const data = parts[1] || ''
-    if (!data) return
+      ctx.drawImage(img, 0, 0)
+      const dataUrl = c.toDataURL(targetFormat, targetQuality)
 
-    const mime = header.match(/:(.*?);/)?.[1] ?? 'image/png'
-    const bytes = atob(data)
-    const buf = new Uint8Array(bytes.length)
-    for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i)
-    const blob = new Blob([buf], { type: mime })
-    const url = URL.createObjectURL(blob)
+      const parts = dataUrl.split(',')
+      const header = parts[0] || ''
+      const data = parts[1] || ''
+      if (!data) return resolve(null)
 
-    const a = document.createElement('a')
-    a.href = url
-    const ext = mime.split('/')[1] || 'png'
-    a.download = `${filename}.${ext}`
-    document.body.appendChild(a)
-    a.click()
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }
-  img.src = internalSrc.value
+      const mime = header.match(/:(.*?);/)?.[1] ?? 'image/png'
+      const bytes = atob(data)
+      const buf = new Uint8Array(bytes.length)
+      for (let i = 0; i < bytes.length; i++) buf[i] = bytes.charCodeAt(i)
+
+      const ext = mime.split('/')[1] || 'png'
+      resolve(new File([buf], `${filename}.${ext}`, { type: mime }))
+    }
+    img.onerror = () => resolve(null)
+    img.src = internalSrc.value
+  })
+}
+
+async function downloadImage(filename = 'image', reqFormat?: string, reqQuality?: number) {
+  const file = await getFile(filename, reqFormat, reqQuality)
+  if (!file) return
+
+  const url = URL.createObjectURL(file)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = file.name
+  document.body.appendChild(a)
+  a.click()
+  document.body.removeChild(a)
+  URL.revokeObjectURL(url)
 }
 
 function confirmDownload() {
@@ -237,7 +240,8 @@ function confirmDownload() {
 defineExpose({
   applyCrop,
   cancelCrop,
-  downloadImage
+  downloadImage,
+  getFile
 })
 </script>
 

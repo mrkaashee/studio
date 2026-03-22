@@ -155,12 +155,19 @@ function onCropApply(res: CropResult) {
   console.log('Source Coordinates:', { x: Math.round(res.x), y: Math.round(res.y), width: Math.round(res.width), height: Math.round(res.height) })
 }
 
-function onAvatarCropApply(res: CropResult) {
+async function onAvatarCropApply(res: CropResult) {
   avatarResult.value = res.dataUrl
+
+  if (avatarStudioRef.value) {
+    const file = await avatarStudioRef.value.getFile('avatar')
+    console.log('Avatar Crop applied! Ready to upload:')
+    console.log('Extracted File:', file)
+    console.log(`Size: ${file ? Math.round(file.size / 1024) : 0} KB`)
+  }
+
   isAvatarModalOpen.value = false
   tempAvatarSrc.value = ''
 
-  console.log('Avatar Crop applied')
   console.log('Source Coordinates:', { x: Math.round(res.x), y: Math.round(res.y), width: Math.round(res.width), height: Math.round(res.height) })
 }
 
@@ -428,6 +435,7 @@ function onPlaygroundDownload() {
                 v-model:active-tool="activeTool5"
                 class="h-auto! min-h-0! aspect-square w-full"
                 :crop="{ shape: 'round', fixed: true, size: 512 }"
+                :export="{ defaultFormat: 'image/webp', quality: 0.9 }"
                 :toolbar="{ show: false, items: ['crop', 'apply', 'cancel', 'reset'] }"
                 @crop:apply="onAvatarCropApply"
                 @crop:cancel="isAvatarModalOpen = false"
