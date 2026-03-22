@@ -28,6 +28,10 @@ export interface CropConfig {
   shape?: 'rect' | 'round'
   fixed?: boolean
   size?: number
+  /** Output format, defaults to 'image/png' */
+  format?: 'image/jpeg' | 'image/png' | 'image/webp' | (string & {})
+  /** Output quality for jpeg/webp between 0 and 1 */
+  quality?: number
 }
 
 export interface ZoomConfig {

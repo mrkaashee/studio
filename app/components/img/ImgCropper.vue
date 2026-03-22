@@ -21,7 +21,9 @@ const config = computed(() => ({
   shape: props.crop?.shape ?? 'rect',
   fixed: props.crop?.fixed ?? false,
   zoom: props.zoom ?? false,
-  size: props.crop?.size
+  size: props.crop?.size,
+  format: props.crop?.format ?? (props.crop?.shape === 'round' ? 'image/png' : 'image/jpeg'),
+  quality: props.crop?.quality ?? 0.9
 }))
 
 /**
@@ -617,7 +619,7 @@ function apply() {
     y: py,
     width: pw,
     height: ph,
-    dataUrl: c.toDataURL('image/png')
+    dataUrl: c.toDataURL(config.value.format, config.value.quality)
   })
 }
 
