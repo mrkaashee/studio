@@ -84,9 +84,9 @@ function onReset() {
 </script>
 
 <template>
-  <UMain class="min-h-screen bg-slate-50 dark:bg-slate-950">
+  <UMain class="min-h-screen bg-default dark:bg-neutral-950">
     <!-- Premium Header -->
-    <div class="relative py-20 overflow-hidden border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+    <div class="relative py-20 overflow-hidden border-b border-default bg-default dark:bg-neutral-900">
       <div class="absolute inset-x-0 -top-40 -z-10 transform-gpu overflow-hidden blur-3xl sm:-top-80">
         <div class="relative left-[calc(50%-11rem)] aspect-1155/678 w-144.5 -translate-x-1/2 rotate-30 bg-linear-to-tr from-primary-500 to-blue-500 opacity-20 sm:left-[calc(50%-30rem)] sm:w-288.75" />
       </div>
@@ -98,10 +98,10 @@ function onReset() {
             variant="subtle"
             color="primary"
             class="mb-6 rounded-full px-3 py-1" />
-          <h1 class="text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-6">
+          <h1 class="text-5xl font-extrabold tracking-tight text-neutral-900 dark:text-white mb-6">
             Professional <span class="text-primary-500 italic">Image Cropper</span>
           </h1>
-          <p class="text-xl text-slate-500 dark:text-slate-400 leading-relaxed max-w-2xl">
+          <p class="text-xl text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl">
             Precision tools for perfectly framed visuals. Optimized for social media markers, developers, and designers.
           </p>
         </div>
@@ -114,7 +114,7 @@ function onReset() {
         v-if="!src"
         class="max-w-4xl mx-auto">
         <UCard
-          class="group overflow-hidden border-2 border-dashed border-slate-200 dark:border-slate-800 hover:border-primary-500 transition-colors duration-500 bg-white/50 dark:bg-slate-900/50 backdrop-blur-sm"
+          class="group overflow-hidden border-2 border-dashed border-neutral-200 dark:border-neutral-800 hover:border-primary-500 transition-colors duration-500 bg-white/50 dark:bg-neutral-900/50 backdrop-blur-sm"
           :ui="{ body: 'p-12 sm:p-20' }">
           <ImgDropZone
             ref="dropZoneRef"
@@ -127,10 +127,10 @@ function onReset() {
                     name="i-lucide-cloud-upload"
                     class="w-10 h-10" />
                 </div>
-                <h2 class="text-3xl font-bold mb-4 tracking-tight">
+                <h2 class="text-3xl font-bold mb-4 tracking-tight text-neutral-900 dark:text-white">
                   Drop your image here
                 </h2>
-                <p class="text-slate-500 dark:text-slate-400 max-w-sm mb-10 text-lg">
+                <p class="text-neutral-500 dark:text-neutral-400 max-w-sm mb-10 text-lg">
                   Supports High-Res JPG, PNG, and WebP. Your data stays private and never leaves your browser.
                 </p>
                 <UButton
@@ -147,36 +147,36 @@ function onReset() {
 
         <!-- Feature Highlights -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-20">
-          <div class="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="p-6 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
             <UIcon
               name="i-lucide-maximize"
               class="w-8 h-8 text-primary mb-4" />
-            <h3 class="font-bold text-lg mb-2">
+            <h3 class="font-bold text-lg mb-2 text-neutral-900 dark:text-white">
               Smart Boundaries
             </h3>
-            <p class="text-sm text-slate-500">
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
               Intelligent snapping ensures your crops are always pixel-perfect and exactly centered.
             </p>
           </div>
-          <div class="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="p-6 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
             <UIcon
               name="i-lucide-zap"
               class="w-8 h-8 text-primary mb-4" />
-            <h3 class="font-bold text-lg mb-2">
+            <h3 class="font-bold text-lg mb-2 text-neutral-900 dark:text-white">
               Fast Export
             </h3>
-            <p class="text-sm text-slate-500">
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
               Sub-second local processing for instant downloads with custom quality tuning.
             </p>
           </div>
-          <div class="p-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm">
+          <div class="p-6 bg-white dark:bg-neutral-900 rounded-3xl border border-neutral-200 dark:border-neutral-800 shadow-sm">
             <UIcon
               name="i-lucide-shield-check"
               class="w-8 h-8 text-primary mb-4" />
-            <h3 class="font-bold text-lg mb-2">
+            <h3 class="font-bold text-lg mb-2 text-neutral-900 dark:text-white">
               Privacy First
             </h3>
-            <p class="text-sm text-slate-500">
+            <p class="text-sm text-neutral-500 dark:text-neutral-400">
               All image processing happens locally in your browser. No data is sent to our servers.
             </p>
           </div>
@@ -216,7 +216,7 @@ function onReset() {
               :src="src"
               :crop="cropConfig"
               :zoom="{ step: 0.1, max: 5 }"
-              class="relative rounded-4xl overflow-hidden ring-1 ring-slate-200 dark:ring-slate-800 bg-slate-100 dark:bg-slate-950 shadow-2xl"
+              class="relative rounded-4xl overflow-hidden ring-1 ring-neutral-200 dark:ring-neutral-800 bg-neutral-100 dark:bg-neutral-950 shadow-2xl"
               @crop:apply="onCropApply"
               @reset="onReset" />
           </div>
@@ -224,9 +224,9 @@ function onReset() {
 
         <!-- Sidebar Actions -->
         <aside class="space-y-8 lg:sticky lg:top-12">
-          <UCard class="border-slate-200 dark:border-slate-800 shadow-sm rounded-3xl">
+          <UCard class="border-neutral-200 dark:border-neutral-800 shadow-sm rounded-3xl">
             <template #header>
-              <h3 class="font-black italic text-lg flex items-center gap-2">
+              <h3 class="font-black italic text-lg flex items-center gap-2 text-neutral-900 dark:text-white">
                 <UIcon
                   name="i-lucide-sliders"
                   class="w-5 h-5 text-primary" />
@@ -253,12 +253,12 @@ function onReset() {
                   class="w-full" />
               </UFormField>
 
-              <div class="pt-4 flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-950 rounded-2xl border border-slate-100 dark:border-slate-800">
+              <div class="pt-4 flex items-center justify-between p-4 bg-neutral-50 dark:bg-neutral-950 rounded-2xl border border-neutral-100 dark:border-neutral-800">
                 <div class="space-y-0.5">
-                  <div class="text-sm font-bold tracking-tight">
+                  <div class="text-sm font-bold tracking-tight text-neutral-900 dark:text-white">
                     Lock Ratio
                   </div>
-                  <div class="text-xs text-slate-500">
+                  <div class="text-xs text-neutral-500">
                     Strict mode
                   </div>
                 </div>
@@ -269,9 +269,9 @@ function onReset() {
             </div>
           </UCard>
 
-          <UCard class="border-slate-200 dark:border-slate-800 shadow-sm rounded-3xl bg-primary-50/10 dark:bg-primary-950/5">
+          <UCard class="border-neutral-200 dark:border-neutral-800 shadow-sm rounded-3xl bg-primary-50/10 dark:bg-primary-950/5">
             <template #header>
-              <h3 class="font-black italic text-lg flex items-center gap-2">
+              <h3 class="font-black italic text-lg flex items-center gap-2 text-neutral-900 dark:text-white">
                 <UIcon
                   name="i-lucide-download"
                   class="w-5 h-5 text-primary" />
