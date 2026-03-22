@@ -105,7 +105,7 @@ async function loadFromUrl() {
 
 <template>
   <div
-    class="relative w-full h-full flex items-center justify-center border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800/50 overflow-hidden transition-colors duration-200"
+    class="relative w-full h-full flex items-center justify-center border-2 border-dashed border-muted rounded-xl bg-muted overflow-hidden transition-colors duration-200"
     :class="{
       'border-primary-400 bg-primary-50/30 dark:bg-primary-900/10': isDragging,
       'opacity-50 pointer-events-none': disabled,
@@ -126,13 +126,13 @@ async function loadFromUrl() {
     <!-- Default slot or built-in drop zone UI -->
     <slot>
       <div class="flex flex-col items-center gap-3 p-8 text-center">
-        <div class="w-20 h-20 flex items-center justify-center bg-primary-100 dark:bg-primary-900/20 rounded-full">
-          <UIcon name="i-lucide-image-up" class="size-12 text-primary-400" />
+        <div class="w-20 h-20 flex items-center justify-center bg-primary/20 rounded-full">
+          <UIcon name="i-lucide-image-up" class="size-12 text-primary" />
         </div>
-        <p class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <p class="text-lg font-semibold text-default">
           Drop an image here
         </p>
-        <p class="text-sm text-gray-500 dark:text-gray-400">
+        <p class="text-sm text-muted">
           or
         </p>
         <UButton
@@ -164,7 +164,7 @@ async function loadFromUrl() {
         </div>
         <p
           v-if="urlError"
-          class="text-xs text-red-500">
+          class="text-xs text-error">
           {{ urlError }}
         </p>
       </div>

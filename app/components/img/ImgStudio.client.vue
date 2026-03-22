@@ -296,7 +296,7 @@ defineExpose({
     </div>
 
     <!-- Action Footer -->
-    <div v-if="!hideActions" class="flex items-center gap-2 px-4 py-3 border-t border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-800/50">
+    <div v-if="!hideActions" class="flex items-center gap-2 px-4 py-3 border-t border-muted bg-muted">
       <UButton
         label="Reset Image"
         icon="i-lucide-trash-2"
