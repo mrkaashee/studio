@@ -656,7 +656,7 @@ defineExpose({
         :style="{ cursor: hoverCursor }"
         @mousemove="onHoverMove"
         @mousedown="onPointerDown"
-        @touchstart.passive="onPointerDown" />
+        @touchstart="onPointerDown" />
     </div>
 
     <!-- Action Footer -->
