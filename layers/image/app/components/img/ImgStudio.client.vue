@@ -5,7 +5,7 @@ import type { CropConfig, CropResult, StudioTool, ToolbarConfig, ZoomConfig, Exp
 import ImgDropZone from './ImgDropZone.vue'
 import ImgToolbar from './ImgToolbar.vue'
 import ImgCropper from './ImgCropper.vue'
-import { dataUrlToFile, downloadFile } from '~/utils/image'
+import { dataUrlToFile, downloadFile } from '../../utils/image'
 
 const props = withDefaults(defineProps<{
   src?: string
@@ -83,6 +83,13 @@ const hideActions = computed(() => {
   if (props.hideActions !== undefined) return props.hideActions
   const items = normalizedToolbar.value.items || []
   return items.includes('apply') || items.includes('cancel') || items.includes('reset')
+})
+
+const isNaked = computed(() => {
+  if (typeof props.crop === 'object' && props.crop !== null) {
+    return !!props.crop.naked
+  }
+  return false
 })
 
 // Sync tool activation state
@@ -204,8 +211,12 @@ defineExpose({
 <template>
   <div
     ref="containerRef"
-    class="flex flex-col w-full min-h-100 bg-white dark:bg-gray-900 border border-muted rounded-xl relative overflow-hidden"
-    :class="{ 'opacity-60 pointer-events-none': disabled }">
+    class="flex flex-col w-full bg-white dark:bg-gray-900 overflow-hidden"
+    :class="[
+      isNaked ? 'absolute inset-0 z-0' : 'relative min-h-100 border border-muted rounded-xl',
+      disabled ? 'opacity-60 pointer-events-none' : '',
+    ]"
+    :style="isNaked ? { minHeight: '0', maxHeight: 'none' } : {}">
     <!-- 1. Initial State: No Image -->
     <ImgDropZone v-if="!internalSrc" :accept="accept" @load="onImageLoad">
       <slot name="empty" />

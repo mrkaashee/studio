@@ -1,8 +1,8 @@
 <script lang="ts" setup>
 import { ref, computed } from 'vue'
-import type { AspectPreset, CropResult, StudioTool, CropConfig } from '~/components/img/types'
-import ImgStudio from '~/components/img/ImgStudio.client.vue'
-import ImgDropZone from '~/components/img/ImgDropZone.vue'
+import type { AspectPreset, CropResult, StudioTool, CropConfig } from '../../components/img/types'
+import ImgStudio from '../../components/img/ImgStudio.client.vue'
+import ImgDropZone from '../../components/img/ImgDropZone.vue'
 
 const presets: AspectPreset[] = [
   { label: 'Original', value: null },
@@ -152,6 +152,7 @@ const src10 = ref('')
 const coverResult = ref('')
 const dropZone10 = ref<InstanceType<typeof ImgDropZone>>()
 const coverStudioRef = ref<InstanceType<typeof ImgStudio>>()
+const isNaked10 = ref(true)
 
 const studio1Ref = ref<InstanceType<typeof ImgStudio>>()
 
@@ -199,8 +200,33 @@ async function onSquareCropApply(_res: CropResult) {
   tempSquareSrc.value = ''
 }
 
+const debugInfo = ref('')
+
 function onCoverCropApply(res: CropResult) {
   coverResult.value = res.dataUrl
+
+  // Collect debug info
+  nextTick(() => {
+    setTimeout(() => {
+      const el = document.querySelector('.aspect-\\[2\\.7\\/1\\]') as HTMLElement
+      const img = el?.querySelector('img') as HTMLImageElement
+      if (el && img) {
+        const rect = el.getBoundingClientRect()
+        const imgRect = img.getBoundingClientRect()
+        debugInfo.value = `
+          [Final CSS Rendering Check]
+          Container computed: ${rect.width.toFixed(1)} x ${rect.height.toFixed(1)}
+          Image Element bounds: ${imgRect.width.toFixed(1)} x ${imgRect.height.toFixed(1)}
+          Image object-fit: ${window.getComputedStyle(img).objectFit}
+          Image output resolution: ${res.outWidth} x ${res.outHeight}
+        `
+      }
+      else {
+        debugInfo.value = 'Could not find elements.'
+      }
+    }, 50)
+  })
+
   console.log('Cover Photo applied!', res)
 }
 
@@ -740,6 +766,10 @@ function onPlaygroundDownload() {
                 <span class="text-xs font-black uppercase tracking-[0.2em] text-neutral-400">Desktop View Preview (2.7:1)</span>
               </div>
               <div class="flex items-center gap-2">
+                <UCheckbox
+                  v-model="isNaked10"
+                  label="Naked Mode"
+                  class="mr-4" />
                 <UButton
                   v-if="coverResult"
                   label="Change Photo"
@@ -791,8 +821,8 @@ function onPlaygroundDownload() {
                 ref="coverStudioRef"
                 v-model:src="src10"
                 v-model:active-tool="activeTool10"
-                class="h-full! w-full! border-none! rounded-none!"
-                :crop="{ aspect: 2.7, fixed: true, naked: true, width: 851, height: 315 }"
+                class="absolute inset-0 z-0 h-full! w-full! border-none! rounded-none! min-h-0!"
+                :crop="{ aspect: 2.7, fixed: true, naked: isNaked10, width: 851, height: 315 }"
                 :toolbar="{ show: false, items: ['crop', 'apply', 'cancel', 'reset'] }"
                 @crop:apply="onCoverCropApply" />
 
@@ -800,6 +830,11 @@ function onPlaygroundDownload() {
               <div
                 v-if="src10 || coverResult"
                 class="absolute inset-x-0 bottom-0 h-32 bg-linear-to-t from-black/60 to-transparent pointer-events-none" />
+
+              <!-- DEBUG OVERLAY -->
+              <div v-if="debugInfo" class="absolute top-0 left-0 bg-black/80 text-white text-xs p-2 whitespace-pre shadow-lg z-50">
+                {{ debugInfo }}
+              </div>
             </div>
           </UCard>
         </div>

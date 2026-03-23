@@ -89,6 +89,7 @@ let startMouseX = 0
 let startMouseY = 0
 let startCrop = { x: 0, y: 0, w: 0, h: 0 }
 let startImg = { x: 0, y: 0, w: 0, h: 0 }
+let lastBaseScale = 0
 
 const hoverCursor = ref('default')
 const HANDLE_SIZE = 12
@@ -200,11 +201,13 @@ function initLayout(forceReCenter = false) {
 
     applyAspect()
     clampImgToCrop() // Ensure image covers the newly sized crop box
+    lastBaseScale = baseScale
   }
   else {
-    const oldBaseS = Math.min((oldWidth - padding * 2) / imgW, (oldHeight - padding * 2) / imgH)
-    const zoomRel = imgState.scale / (oldBaseS || 1)
+    const oldBaseS = lastBaseScale || 1
+    const zoomRel = imgState.scale / oldBaseS
     const newScale = baseScale * zoomRel
+    lastBaseScale = baseScale
 
     const imgCXRaw = (oldWidth / 2 - imgState.x) / imgState.scale
     const imgCYRaw = (oldHeight / 2 - imgState.y) / imgState.scale
@@ -582,6 +585,7 @@ function apply() {
   const ph = cropState.h / imgState.scale
   const ow = config.value.width || config.value.size || pw
   const oh = config.value.height || config.value.size || ph
+
   const c = document.createElement('canvas')
   c.width = ow
   c.height = oh
