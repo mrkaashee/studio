@@ -92,6 +92,18 @@ const isNaked = computed(() => {
   return false
 })
 
+const containerStyle = computed(() => {
+  if (isNaked.value) return { minHeight: '0', maxHeight: 'none' }
+  if (typeof props.crop === 'object' && props.crop !== null && props.crop.fixed && props.crop.aspect) {
+    const raw = props.crop.aspect
+    const aspect = typeof raw === 'string'
+      ? raw.split('/').map(Number).reduce((a, b) => a / b)
+      : Number(raw)
+    return { aspectRatio: `${aspect}`, minHeight: 'unset' }
+  }
+  return {}
+})
+
 // Sync tool activation state
 watch(activeTool, tool => {
   if (tool === 'crop' && !isCropEnabled.value) {
@@ -213,11 +225,12 @@ defineExpose({
     ref="containerRef"
     class="flex flex-col w-full bg-white dark:bg-gray-900 overflow-hidden"
     :class="[
-      isNaked ? 'absolute inset-0 z-0' : 'relative min-h-100 border border-muted rounded-xl',
+      isNaked ? 'absolute inset-0 z-0' : 'relative border border-muted rounded-xl',
       disabled ? 'opacity-60 pointer-events-none' : '',
     ]"
-    :style="isNaked ? { minHeight: '0', maxHeight: 'none' } : {}">
+    :style="containerStyle">
     <!-- 1. Initial State: No Image -->
+
     <ImgDropZone v-if="!internalSrc" :accept="accept" @load="onImageLoad">
       <slot name="empty" />
     </ImgDropZone>

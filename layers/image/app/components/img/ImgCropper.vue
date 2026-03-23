@@ -109,6 +109,15 @@ useResizeObserver(containerRef, () => {
   initLayout(false)
 })
 
+watch(() => config.value.naked, () => {
+  // When naked mode changes, just reset the layout state.
+  // The ResizeObserver will fire automatically after CSS reflow and
+  // perform a clean fresh initLayout since hasExisting will be false.
+  cropState.w = 0
+  imgState.scale = 0
+  lastBaseScale = 0
+})
+
 async function loadImage() {
   const img = new Image()
   img.crossOrigin = 'anonymous'
