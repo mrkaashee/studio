@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { fileToDataUrl, urlToDataUrl } from '~/utils/image'
+import { fileToDataUrl, urlToDataUrl } from '../../utils/image'
 import { useDropZone } from '@vueuse/core'
 
 const props = withDefaults(defineProps<{

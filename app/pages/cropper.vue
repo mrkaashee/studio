@@ -1,6 +1,6 @@
 <script lang="ts" setup>
 import { ref, computed, watch } from 'vue'
-import type { AspectPreset, CropResult, StudioTool, CropConfig } from '~/components/img/types'
+import type { AspectPreset, CropResult, StudioTool, CropConfig } from '../../components/img/types'
 
 // Use standard presets from the image layer components
 const presets: AspectPreset[] = [

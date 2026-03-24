@@ -1,6 +1,4 @@
 <script lang="ts" setup>
-import { useToolsList } from '~/composables/useToolsList'
-
 const { tools } = useToolsList()
 const imageTools = computed(() => tools.filter(t => t.category.label === 'Image'))
 </script>
