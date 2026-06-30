@@ -1,0 +1,21 @@
+allowBuilds:
+  '@parcel/watcher': true
+  esbuild: true
+  sharp: true
+  vue-demi: true
+catalog:
+  vite: npm:@voidzero-dev/vite-plus-core@latest
+  vite-plus: ^0.2.1
+  vitest: 4.1.9
+minimumReleaseAgeExclude:
+  - tailwindcss@4.3.2
+overrides:
+  vite: 'catalog:'
+  vitest: 'catalog:'
+peerDependencyRules:
+  allowAny:
+    - vite
+    - vitest
+  allowedVersions:
+    vite: '*'
+    vitest: '*'
