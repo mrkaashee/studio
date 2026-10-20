@@ -4,18 +4,14 @@ allowBuilds:
   sharp: true
   vue-demi: true
 catalog:
-  vite: npm:@voidzero-dev/vite-plus-core@latest
-  vite-plus: ^0.2.1
-  vitest: 4.1.9
+  vite: npm:@voidzero-dev/vite-plus-core@1.3.0
+  vite-plus: 1.3.0
 minimumReleaseAgeExclude:
   - tailwindcss@4.3.2
 overrides:
-  vite: 'catalog:'
-  vitest: 'catalog:'
+  vite@*: 'catalog:'
 peerDependencyRules:
   allowAny:
     - vite
-    - vitest
   allowedVersions:
     vite: '*'
-    vitest: '*'
